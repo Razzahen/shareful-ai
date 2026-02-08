@@ -1,0 +1,160 @@
+{
+  "version": 1,
+  "owner": "shareful-ai",
+  "shares": [
+    {
+      "slug": "fix-nextjs-hydration-dynamic-imports",
+      "title": "Fix Next.js hydration error with dynamic imports",
+      "tags": ["nextjs", "react", "hydration", "ssr"],
+      "problem": "Component using window or document throws hydration mismatch error during SSR",
+      "solution_type": "fix"
+    },
+    {
+      "slug": "fix-react-useeffect-infinite-loop",
+      "title": "Fix React useEffect infinite loop caused by object dependencies",
+      "tags": ["react", "hooks", "useeffect", "performance"],
+      "problem": "useEffect runs infinitely because an object or array in the dependency array is recreated every render",
+      "solution_type": "fix"
+    },
+    {
+      "slug": "fix-typescript-generic-constraints",
+      "title": "Fix TypeScript generic constraints for key-value lookups",
+      "tags": ["typescript", "generics", "type-safety"],
+      "problem": "TypeScript generic function loses type information when accessing object properties dynamically",
+      "solution_type": "pattern"
+    },
+    {
+      "slug": "fix-esm-cjs-interop-dual-package",
+      "title": "Fix ESM/CJS interop errors with dual package imports",
+      "tags": ["esm", "cjs", "node", "modules", "interop"],
+      "problem": "ERR_REQUIRE_ESM or SyntaxError: Cannot use import statement when mixing ESM and CJS modules",
+      "solution_type": "fix"
+    },
+    {
+      "slug": "fix-postgres-connection-pooling-serverless",
+      "title": "Fix Postgres connection exhaustion in serverless environments",
+      "tags": ["postgres", "serverless", "connection-pooling", "vercel", "lambda"],
+      "problem": "too many connections for role or FATAL: remaining connection slots are reserved in serverless functions",
+      "solution_type": "fix"
+    },
+    {
+      "slug": "fix-docker-node-modules-layer-cache",
+      "title": "Fix Docker build cache invalidation for node_modules",
+      "tags": ["docker", "node", "cache", "performance"],
+      "problem": "Docker rebuilds node_modules from scratch on every code change, making builds slow",
+      "solution_type": "fix"
+    },
+    {
+      "slug": "fix-git-rebase-conflict-resolution",
+      "title": "Fix git rebase conflicts with a systematic approach",
+      "tags": ["git", "rebase", "conflicts", "workflow"],
+      "problem": "Git rebase produces repeated conflicts or confusing merge markers that are hard to resolve",
+      "solution_type": "pattern"
+    },
+    {
+      "slug": "fix-tailwind-dark-mode-class-strategy",
+      "title": "Fix Tailwind CSS dark mode not working with class strategy",
+      "tags": ["tailwind", "css", "dark-mode", "theming"],
+      "problem": "Tailwind dark: variants have no effect even though dark mode class is toggled",
+      "solution_type": "fix"
+    },
+    {
+      "slug": "fix-vercel-env-vars-edge-runtime",
+      "title": "Fix Vercel environment variables not available in Edge Runtime",
+      "tags": ["vercel", "edge", "environment-variables", "nextjs"],
+      "problem": "process.env.VAR is undefined in Edge Runtime or Middleware despite being set in Vercel dashboard",
+      "solution_type": "fix"
+    },
+    {
+      "slug": "fix-prisma-n-plus-one-queries",
+      "title": "Fix Prisma N+1 query problem with includes and joins",
+      "tags": ["prisma", "database", "performance", "n-plus-one"],
+      "problem": "Prisma makes hundreds of individual queries when loading related data in a loop",
+      "solution_type": "fix"
+    },
+    {
+      "slug": "fix-nextjs-server-component-client-import",
+      "title": "Fix Next.js server component importing client-only code",
+      "tags": ["nextjs", "react", "server-components", "app-router"],
+      "problem": "Server component throws error when importing useState, useEffect, or other client-side hooks",
+      "solution_type": "fix"
+    },
+    {
+      "slug": "fix-react-stale-closure-hooks",
+      "title": "Fix React stale closure bug in hooks and event handlers",
+      "tags": ["react", "hooks", "closures", "state"],
+      "problem": "Event handler or timer callback reads outdated state value instead of the latest",
+      "solution_type": "fix"
+    },
+    {
+      "slug": "fix-typescript-module-augmentation",
+      "title": "Fix TypeScript module augmentation for extending third-party types",
+      "tags": ["typescript", "types", "module-augmentation", "declarations"],
+      "problem": "Cannot add custom properties to third-party library types like Express Request or Next.js env",
+      "solution_type": "pattern"
+    },
+    {
+      "slug": "fix-nextjs-app-router-not-found",
+      "title": "Fix Next.js App Router custom 404 not-found page",
+      "tags": ["nextjs", "app-router", "404", "routing"],
+      "problem": "Custom 404 page not showing or notFound() function not triggering the not-found page",
+      "solution_type": "fix"
+    },
+    {
+      "slug": "fix-react-suspense-streaming-ssr",
+      "title": "Fix React Suspense boundaries for streaming SSR in Next.js",
+      "tags": ["react", "suspense", "ssr", "streaming", "nextjs"],
+      "problem": "Async server component blocks entire page load instead of streaming progressively",
+      "solution_type": "pattern"
+    },
+    {
+      "slug": "fix-typescript-satisfies-type-safety",
+      "title": "Use TypeScript satisfies operator for type-safe config objects",
+      "tags": ["typescript", "satisfies", "type-safety", "config"],
+      "problem": "Type annotation on config object widens types and loses literal inference",
+      "solution_type": "pattern"
+    },
+    {
+      "slug": "fix-postgres-jsonb-query-performance",
+      "title": "Fix slow Postgres JSONB queries with proper indexing",
+      "tags": ["postgres", "jsonb", "indexing", "performance"],
+      "problem": "JSONB queries using @> or -> operators do sequential scans and run slowly on large tables",
+      "solution_type": "fix"
+    },
+    {
+      "slug": "fix-docker-multistage-build-size",
+      "title": "Fix Docker image size with multi-stage builds for Node.js",
+      "tags": ["docker", "node", "image-size", "optimization"],
+      "problem": "Docker image for Node.js app is 1GB+ due to dev dependencies and build artifacts",
+      "solution_type": "pattern"
+    },
+    {
+      "slug": "fix-github-actions-cache-node-modules",
+      "title": "Fix GitHub Actions slow builds by caching node_modules",
+      "tags": ["github-actions", "ci", "cache", "node"],
+      "problem": "GitHub Actions CI runs npm install on every push, adding 2-5 minutes to each build",
+      "solution_type": "fix"
+    },
+    {
+      "slug": "fix-prisma-migration-drift",
+      "title": "Fix Prisma migration drift between schema and database",
+      "tags": ["prisma", "migration", "database", "schema"],
+      "problem": "Prisma warns about migration drift or shadow database mismatch after manual DB changes",
+      "solution_type": "fix"
+    },
+    {
+      "slug": "fix-nextjs-isr-on-demand-revalidation",
+      "title": "Fix Next.js ISR stale content with on-demand revalidation",
+      "tags": ["nextjs", "isr", "revalidation", "caching"],
+      "problem": "ISR pages show stale content for up to revalidate seconds after updating the data source",
+      "solution_type": "pattern"
+    },
+    {
+      "slug": "fix-react-memo-unnecessary-rerenders",
+      "title": "Fix unnecessary React re-renders with memo and stable references",
+      "tags": ["react", "performance", "memo", "optimization"],
+      "problem": "Child components re-render on every parent render even when their props have not changed",
+      "solution_type": "pattern"
+    }
+  ]
+}

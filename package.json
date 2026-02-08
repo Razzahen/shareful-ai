@@ -1,0 +1,18 @@
+{
+  "devDependencies": {
+    "@biomejs/biome": "2.3.13",
+    "husky": "^9.1.7",
+    "lint-staged": "^16.2.7",
+    "ultracite": "7.1.5"
+  },
+  "scripts": {
+    "check": "ultracite check",
+    "fix": "ultracite fix",
+    "prepare": "husky"
+  },
+  "lint-staged": {
+    "*.{js,jsx,ts,tsx,json,jsonc,css,scss,md,mdx}": [
+      "yarn dlx ultracite fix"
+    ]
+  }
+}
