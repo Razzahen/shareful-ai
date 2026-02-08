@@ -1,7 +1,7 @@
-import { readFileSync, writeFileSync, existsSync } from 'fs';
-import { join } from 'path';
-import { MANIFEST_FILE } from './constants.ts';
-import type { ShareManifest } from './types.ts';
+import { existsSync, readFileSync, writeFileSync } from "node:fs";
+import { join } from "node:path";
+import { MANIFEST_FILE } from "./constants.ts";
+import type { ShareManifest } from "./types.ts";
 
 export function readManifest(dir: string): ShareManifest | null {
   const manifestPath = join(dir, MANIFEST_FILE);
@@ -10,7 +10,7 @@ export function readManifest(dir: string): ShareManifest | null {
   }
 
   try {
-    const content = readFileSync(manifestPath, 'utf-8');
+    const content = readFileSync(manifestPath, "utf-8");
     return JSON.parse(content) as ShareManifest;
   } catch {
     return null;
@@ -19,5 +19,9 @@ export function readManifest(dir: string): ShareManifest | null {
 
 export function writeManifest(dir: string, manifest: ShareManifest): void {
   const manifestPath = join(dir, MANIFEST_FILE);
-  writeFileSync(manifestPath, JSON.stringify(manifest, null, 2) + '\n', 'utf-8');
+  writeFileSync(
+    manifestPath,
+    `${JSON.stringify(manifest, null, 2)}\n`,
+    "utf-8"
+  );
 }

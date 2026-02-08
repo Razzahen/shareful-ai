@@ -20,24 +20,18 @@ jobs:
       - name: Checkout repo
         uses: actions/checkout@v6
 
-      - name: Enable Corepack
-        run: corepack enable
-
       - name: Setup Node
         uses: actions/setup-node@v6
         with:
           node-version: lts/*
-          cache: pnpm
+          cache: npm
 
       - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+        run: npm ci
 
-      - name: Type check
-        run: pnpm build
+      - name: Build
+        run: npm run build
 
-      - name: Prettier
+      - name: Check formatting
         if: matrix.os == 'ubuntu-latest'
-        run: pnpm format:check
-
-      - name: Tests
-        run: pnpm test
+        run: npm run check

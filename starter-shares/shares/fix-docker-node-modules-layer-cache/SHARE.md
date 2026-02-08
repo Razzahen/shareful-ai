@@ -34,7 +34,7 @@ WORKDIR /app
 COPY package.json package-lock.json ./
 
 # 2. Install dependencies (cached unless package files change)
-RUN npm ci --production=false
+RUN npm ci
 
 # 3. Copy source code (changes frequently, but deps are cached)
 COPY . .
@@ -48,7 +48,7 @@ FROM node:20-alpine AS production
 WORKDIR /app
 
 COPY package.json package-lock.json ./
-RUN npm ci --production=true --ignore-scripts
+RUN npm ci --omit=dev --ignore-scripts
 
 COPY --from=base /app/dist ./dist
 

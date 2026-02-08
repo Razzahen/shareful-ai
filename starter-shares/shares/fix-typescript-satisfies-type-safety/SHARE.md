@@ -7,7 +7,7 @@ solution_type: pattern
 created: 2026-02-08
 environment:
   language: typescript
-  version: "5.0+"
+  version: "4.9+"
 ---
 
 ## Problem

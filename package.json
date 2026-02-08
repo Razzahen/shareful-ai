@@ -1,18 +1,27 @@
 {
+  "private": true,
+  "packageManager": "npm@10.9.3",
+  "workspaces": [
+    "apps/*"
+  ],
   "devDependencies": {
     "@biomejs/biome": "2.3.13",
     "husky": "^9.1.7",
     "lint-staged": "^16.2.7",
+    "turbo": "^2",
     "ultracite": "7.1.5"
   },
   "scripts": {
+    "build": "turbo build",
+    "dev": "turbo dev",
+    "lint": "turbo lint",
     "check": "ultracite check",
     "fix": "ultracite fix",
     "prepare": "husky"
   },
   "lint-staged": {
     "*.{js,jsx,ts,tsx,json,jsonc,css,scss,md,mdx}": [
-      "yarn dlx ultracite fix"
+      "npx ultracite fix"
     ]
   }
 }

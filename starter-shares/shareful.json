@@ -33,7 +33,13 @@
     {
       "slug": "fix-postgres-connection-pooling-serverless",
       "title": "Fix Postgres connection exhaustion in serverless environments",
-      "tags": ["postgres", "serverless", "connection-pooling", "vercel", "lambda"],
+      "tags": [
+        "postgres",
+        "serverless",
+        "connection-pooling",
+        "vercel",
+        "lambda"
+      ],
       "problem": "too many connections for role or FATAL: remaining connection slots are reserved in serverless functions",
       "solution_type": "fix"
     },

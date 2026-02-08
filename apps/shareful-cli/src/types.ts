@@ -1,4 +1,9 @@
-export type SolutionType = 'fix' | 'workaround' | 'pattern' | 'reference' | 'config';
+export type SolutionType =
+  | "fix"
+  | "workaround"
+  | "pattern"
+  | "reference"
+  | "config";
 
 export interface ShareFrontmatter {
   title: string;
@@ -9,7 +14,7 @@ export interface ShareFrontmatter {
   verified?: boolean;
   created?: string;
   updated?: string;
-  ai_provider?: 'claude' | 'gpt' | 'gemini';
+  ai_provider?: "claude" | "gpt" | "gemini";
   environment?: {
     language?: string;
     framework?: string;
@@ -18,7 +23,7 @@ export interface ShareFrontmatter {
   related?: string[];
 }
 
-export interface Share {
+export interface ParsedShare {
   frontmatter: ShareFrontmatter;
   content: string;
   filePath: string;

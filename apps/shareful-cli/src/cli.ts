@@ -1,53 +1,60 @@
 #!/usr/bin/env node
 
-import { writeFileSync, readFileSync, existsSync, mkdirSync, readdirSync, statSync } from 'fs';
-import { basename, join, dirname } from 'path';
-import { fileURLToPath } from 'url';
-import { runCreate } from './create.ts';
-import { runPublish } from './publish.ts';
-import { parseShareMd } from './share-parser.ts';
-import { track, setVersion } from './telemetry.ts';
-import { SHARES_DIR, SHARE_FILE, MANIFEST_FILE } from './constants.ts';
-import type { ShareManifest } from './types.ts';
-import { writeManifest } from './manifest.ts';
+import {
+  existsSync,
+  mkdirSync,
+  readdirSync,
+  readFileSync,
+  statSync,
+  writeFileSync,
+} from "node:fs";
+import { basename, dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
+import { MANIFEST_FILE, SHARE_FILE, SHARES_DIR } from "./constants.ts";
+import { runCreate } from "./create.ts";
+import { writeManifest } from "./manifest.ts";
+import { runPublish } from "./publish.ts";
+import { parseShareMd } from "./share-parser.ts";
+import { setVersion, track } from "./telemetry.ts";
+import type { ShareManifest } from "./types.ts";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
 function getVersion(): string {
   try {
-    const pkgPath = join(__dirname, '..', 'package.json');
-    const pkg = JSON.parse(readFileSync(pkgPath, 'utf-8'));
+    const pkgPath = join(__dirname, "..", "package.json");
+    const pkg = JSON.parse(readFileSync(pkgPath, "utf-8"));
     return pkg.version;
   } catch {
-    return '0.0.0';
+    return "0.0.0";
   }
 }
 
 const VERSION = getVersion();
 setVersion(VERSION);
 
-const RESET = '\x1b[0m';
-const BOLD = '\x1b[1m';
-const DIM = '\x1b[38;5;102m';
-const TEXT = '\x1b[38;5;145m';
-const CYAN = '\x1b[36m';
+const RESET = "\x1b[0m";
+const BOLD = "\x1b[1m";
+const DIM = "\x1b[38;5;102m";
+const TEXT = "\x1b[38;5;145m";
+const CYAN = "\x1b[36m";
 
 const LOGO_LINES = [
-  '███████╗██╗  ██╗ █████╗ ██████╗ ███████╗███████╗██╗   ██╗██╗     ',
-  '██╔════╝██║  ██║██╔══██╗██╔══██╗██╔════╝██╔════╝██║   ██║██║     ',
-  '███████╗███████║███████║██████╔╝█████╗  █████╗  ██║   ██║██║     ',
-  '╚════██║██╔══██║██╔══██║██╔══██╗██╔══╝  ██╔══╝  ██║   ██║██║     ',
-  '███████║██║  ██║██║  ██║██║  ██║███████╗██║     ╚██████╔╝███████╗',
-  '╚══════╝╚═╝  ╚═╝╚═╝  ╚═╝╚═╝  ╚═╝╚══════╝╚═╝      ╚═════╝ ╚══════╝',
+  "███████╗██╗  ██╗ █████╗ ██████╗ ███████╗███████╗██╗   ██╗██╗     ",
+  "██╔════╝██║  ██║██╔══██╗██╔══██╗██╔════╝██╔════╝██║   ██║██║     ",
+  "███████╗███████║███████║██████╔╝█████╗  █████╗  ██║   ██║██║     ",
+  "╚════██║██╔══██║██╔══██║██╔══██╗██╔══╝  ██╔══╝  ██║   ██║██║     ",
+  "███████║██║  ██║██║  ██║██║  ██║███████╗██║     ╚██████╔╝███████╗",
+  "╚══════╝╚═╝  ╚═╝╚═╝  ╚═╝╚═╝  ╚═╝╚══════╝╚═╝      ╚═════╝ ╚══════╝",
 ];
 
 const GRAYS = [
-  '\x1b[38;5;250m',
-  '\x1b[38;5;248m',
-  '\x1b[38;5;245m',
-  '\x1b[38;5;243m',
-  '\x1b[38;5;240m',
-  '\x1b[38;5;238m',
+  "\x1b[38;5;250m",
+  "\x1b[38;5;248m",
+  "\x1b[38;5;245m",
+  "\x1b[38;5;243m",
+  "\x1b[38;5;240m",
+  "\x1b[38;5;238m",
 ];
 
 function showLogo(): void {
@@ -60,7 +67,7 @@ function showLogo(): void {
 function showBanner(): void {
   showLogo();
   console.log();
-  console.log(`${DIM}Share AI coding solutions with the world${RESET}`);
+  console.log(`${DIM}Shared solutions for AI agents${RESET}`);
   console.log();
   console.log(
     `  ${DIM}$${RESET} ${TEXT}npx shareful init ${DIM}[name]${RESET}     ${DIM}Create a shares repo${RESET}`
@@ -120,7 +127,9 @@ function runInit(args: string[]): void {
   const manifestPath = join(repoDir, MANIFEST_FILE);
 
   if (existsSync(manifestPath)) {
-    console.log(`${TEXT}Shareful repo already initialized at ${DIM}${hasName ? repoName : '.'}${RESET}`);
+    console.log(
+      `${TEXT}Shareful repo already initialized at ${DIM}${hasName ? repoName : "."}${RESET}`
+    );
     return;
   }
 
@@ -131,11 +140,11 @@ function runInit(args: string[]): void {
   mkdirSync(sharesDir, { recursive: true });
 
   // Create sample SHARE.md
-  const sampleSlug = 'example-share';
+  const sampleSlug = "example-share";
   const sampleDir = join(sharesDir, sampleSlug);
   mkdirSync(sampleDir, { recursive: true });
 
-  const today = new Date().toISOString().split('T')[0];
+  const today = new Date().toISOString().split("T")[0];
   const sampleShare = `---
 title: "Example: Fix a common issue"
 slug: ${sampleSlug}
@@ -171,14 +180,14 @@ Explain why this solution resolves the problem.
   // Create shareful.json manifest
   const manifest: ShareManifest = {
     version: 1,
-    owner: '',
+    owner: "",
     shares: [
       {
         slug: sampleSlug,
-        title: 'Example: Fix a common issue',
-        tags: ['example'],
-        problem: 'Describe the problem you solved',
-        solution_type: 'fix',
+        title: "Example: Fix a common issue",
+        tags: ["example"],
+        problem: "Describe the problem you solved",
+        solution_type: "fix",
       },
     ],
   };
@@ -186,32 +195,41 @@ Explain why this solution resolves the problem.
   writeManifest(repoDir, manifest);
 
   // Create .gitignore
-  const gitignorePath = join(repoDir, '.gitignore');
-  if (!existsSync(gitignorePath)) {
-    writeFileSync(gitignorePath, 'node_modules/\n.DS_Store\n');
+  const gitignorePath = join(repoDir, ".gitignore");
+  const createdGitignore = !existsSync(gitignorePath);
+  if (createdGitignore) {
+    writeFileSync(gitignorePath, "node_modules/\n.DS_Store\n");
   }
 
-  track({ event: 'init', repoName });
+  track({ event: "init", repoName });
 
-  const displayName = hasName ? repoName : '.';
+  const displayName = hasName ? repoName : ".";
   console.log(`${TEXT}Initialized shareful repo: ${DIM}${displayName}${RESET}`);
   console.log();
   console.log(`${DIM}Created:${RESET}`);
-  console.log(`  ${SHARES_DIR}/${sampleSlug}/${SHARE_FILE}  ${DIM}(sample share)${RESET}`);
+  console.log(
+    `  ${SHARES_DIR}/${sampleSlug}/${SHARE_FILE}  ${DIM}(sample share)${RESET}`
+  );
   console.log(`  ${MANIFEST_FILE}`);
-  if (!existsSync(join(repoDir, '.git'))) {
-    console.log(`  .gitignore`);
+  if (createdGitignore) {
+    console.log("  .gitignore");
   }
   console.log();
   console.log(`${DIM}Next steps:${RESET}`);
   if (hasName) {
     console.log(`  1. ${TEXT}cd ${repoName}${RESET}`);
-    console.log(`  2. ${TEXT}git init && gh repo create ${repoName} --public --source .${RESET}`);
-    console.log(`  3. Edit ${TEXT}${SHARES_DIR}/${sampleSlug}/${SHARE_FILE}${RESET} or create a new share`);
+    console.log(
+      `  2. ${TEXT}git init && gh repo create ${repoName} --public --source .${RESET}`
+    );
+    console.log(
+      `  3. Edit ${TEXT}${SHARES_DIR}/${sampleSlug}/${SHARE_FILE}${RESET} or create a new share`
+    );
     console.log(`  4. ${TEXT}npx shareful create${RESET} to add more shares`);
     console.log(`  5. ${TEXT}npx shareful publish${RESET} to publish`);
   } else {
-    console.log(`  1. Edit ${TEXT}${SHARES_DIR}/${sampleSlug}/${SHARE_FILE}${RESET} or create a new share`);
+    console.log(
+      `  1. Edit ${TEXT}${SHARES_DIR}/${sampleSlug}/${SHARE_FILE}${RESET} or create a new share`
+    );
     console.log(`  2. ${TEXT}npx shareful create${RESET} to add more shares`);
     console.log(`  3. ${TEXT}npx shareful publish${RESET} to publish`);
   }
@@ -223,7 +241,9 @@ async function runList(): Promise<void> {
   const sharesDir = join(cwd, SHARES_DIR);
 
   if (!existsSync(sharesDir)) {
-    console.log(`${DIM}No shares/ directory found. Run${RESET} ${TEXT}npx shareful init${RESET} ${DIM}first.${RESET}`);
+    console.log(
+      `${DIM}No shares/ directory found. Run${RESET} ${TEXT}npx shareful init${RESET} ${DIM}first.${RESET}`
+    );
     return;
   }
 
@@ -231,7 +251,10 @@ async function runList(): Promise<void> {
   try {
     dirs = readdirSync(sharesDir).filter((name) => {
       const fullPath = join(sharesDir, name);
-      return statSync(fullPath).isDirectory() && existsSync(join(fullPath, SHARE_FILE));
+      return (
+        statSync(fullPath).isDirectory() &&
+        existsSync(join(fullPath, SHARE_FILE))
+      );
     });
   } catch {
     console.log(`${DIM}Failed to read shares directory.${RESET}`);
@@ -239,7 +262,9 @@ async function runList(): Promise<void> {
   }
 
   if (dirs.length === 0) {
-    console.log(`${DIM}No shares found. Run${RESET} ${TEXT}npx shareful create${RESET} ${DIM}to create one.${RESET}`);
+    console.log(
+      `${DIM}No shares found. Run${RESET} ${TEXT}npx shareful create${RESET} ${DIM}to create one.${RESET}`
+    );
     return;
   }
 
@@ -251,8 +276,10 @@ async function runList(): Promise<void> {
     const share = await parseShareMd(sharePath);
 
     if (share) {
-      const tags = share.frontmatter.tags.join(', ');
-      console.log(`  ${CYAN}${share.frontmatter.slug}${RESET} ${DIM}[${share.frontmatter.solution_type}]${RESET}`);
+      const tags = share.frontmatter.tags.join(", ");
+      console.log(
+        `  ${CYAN}${share.frontmatter.slug}${RESET} ${DIM}[${share.frontmatter.solution_type}]${RESET}`
+      );
       console.log(`    ${TEXT}${share.frontmatter.title}${RESET}`);
       console.log(`    ${DIM}${tags}${RESET}`);
     } else {
@@ -279,33 +306,33 @@ async function main(): Promise<void> {
   const restArgs = args.slice(1);
 
   switch (command) {
-    case 'init':
+    case "init":
       showLogo();
       console.log();
       runInit(restArgs);
       break;
-    case 'create':
-    case 'new':
+    case "create":
+    case "new":
       showLogo();
       console.log();
       await runCreate(restArgs);
       break;
-    case 'publish':
-    case 'push':
+    case "publish":
+    case "push":
       showLogo();
       console.log();
       await runPublish();
       break;
-    case 'list':
-    case 'ls':
+    case "list":
+    case "ls":
       await runList();
       break;
-    case '--help':
-    case '-h':
+    case "--help":
+    case "-h":
       showHelp();
       break;
-    case '--version':
-    case '-v':
+    case "--version":
+    case "-v":
       console.log(VERSION);
       break;
     default:
@@ -314,4 +341,7 @@ async function main(): Promise<void> {
   }
 }
 
-main();
+main().catch((err) => {
+  console.error(err.message || err);
+  process.exit(1);
+});

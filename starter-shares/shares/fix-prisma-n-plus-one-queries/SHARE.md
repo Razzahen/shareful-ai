@@ -82,7 +82,7 @@ const posts = await prisma.post.findMany({
 
 ## Why It Works
 
-By default, Prisma loads relations lazily -- it only queries the database when you access a relation. `include` tells Prisma to load relations eagerly in the initial query. Under the hood, Prisma issues a second query with an `IN` clause (e.g., `WHERE id IN (1, 2, 3, ...)`) rather than one query per record.
+By default, Prisma does NOT load relations unless explicitly requested with `include` or `select`. Without `include`, accessing a relation property on a loaded record is simply `undefined`. The N+1 pattern arises when developers manually query each relation in a loop (as shown above). `include` tells Prisma to eager-load relations in the initial query. Under the hood, Prisma issues a second query with an `IN` clause (e.g., `WHERE id IN (1, 2, 3, ...)`) rather than one query per record.
 
 With `relationLoadStrategy: "join"`, Prisma generates a single SQL query with `JOIN` clauses, which can be faster for simple relations.
 

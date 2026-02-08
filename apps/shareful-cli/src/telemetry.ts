@@ -1,27 +1,30 @@
-const TELEMETRY_URL = 'https://shareful.ai/api/telemetry';
+const TELEMETRY_URL = "https://shareful.ai/api/telemetry";
 
 interface CreateTelemetryData {
-  event: 'create';
+  event: "create";
   slug: string;
   solutionType: string;
 }
 
 interface PublishTelemetryData {
-  event: 'publish';
+  event: "publish";
   shareCount: string;
 }
 
 interface InitTelemetryData {
-  event: 'init';
+  event: "init";
   repoName: string;
 }
 
-type TelemetryData = CreateTelemetryData | PublishTelemetryData | InitTelemetryData;
+type TelemetryData =
+  | CreateTelemetryData
+  | PublishTelemetryData
+  | InitTelemetryData;
 
 let cliVersion: string | null = null;
 
 function isEnabled(): boolean {
-  return !process.env.DISABLE_TELEMETRY && !process.env.DO_NOT_TRACK;
+  return !(process.env.DISABLE_TELEMETRY || process.env.DO_NOT_TRACK);
 }
 
 export function setVersion(version: string): void {
@@ -29,13 +32,15 @@ export function setVersion(version: string): void {
 }
 
 export function track(data: TelemetryData): void {
-  if (!isEnabled()) return;
+  if (!isEnabled()) {
+    return;
+  }
 
   try {
     const params = new URLSearchParams();
 
     if (cliVersion) {
-      params.set('v', cliVersion);
+      params.set("v", cliVersion);
     }
 
     for (const [key, value] of Object.entries(data)) {
@@ -44,7 +49,9 @@ export function track(data: TelemetryData): void {
       }
     }
 
-    fetch(`${TELEMETRY_URL}?${params.toString()}`).catch(() => {});
+    fetch(`${TELEMETRY_URL}?${params.toString()}`).catch(() => {
+      // Intentionally swallowed - telemetry must not affect CLI behavior
+    });
   } catch {
     // Silently fail
   }

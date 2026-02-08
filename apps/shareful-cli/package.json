@@ -1,5 +1,5 @@
 {
-  "name": "shareful",
+  "name": "@shareful/cli",
   "version": "0.1.0",
   "description": "Share AI coding solutions as markdown files in GitHub repos",
   "type": "module",
@@ -38,6 +38,9 @@
   },
   "author": "",
   "license": "MIT",
+  "publishConfig": {
+    "access": "public"
+  },
   "dependencies": {
     "@clack/prompts": "^0.11.0",
     "gray-matter": "^4.0.3"
@@ -49,6 +52,5 @@
   },
   "engines": {
     "node": ">=18"
-  },
-  "packageManager": "pnpm@10.17.1"
+  }
 }

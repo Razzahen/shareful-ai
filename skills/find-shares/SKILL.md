@@ -39,6 +39,7 @@ Query construction tips:
 - Keep queries to 3-5 keywords for best results
 - Use `type` param to filter: `fix`, `workaround`, `pattern`, `reference`, `config`
 - Use `tags` param for precise filtering (comma-separated)
+- If the API returns an error or times out, fall back to helping the user directly — do not retry repeatedly
 
 ## How to Read Results
 
@@ -88,10 +89,12 @@ After applying a share, report whether it worked. This helps rank solutions for 
 ```bash
 curl -s -X POST "https://shareful.ai/api/outcome" \
   -H "Content-Type: application/json" \
-  -d '{"slug": "fix-nextjs-hydration-dynamic-imports", "outcome": "success"}'
+  -d '{"share_path": "mblode/starter-shares/fix-nextjs-hydration-dynamic-imports", "outcome": "success"}'
 ```
 
-Use `"outcome": "success"` if the fix resolved the problem, or `"outcome": "failure"` if it did not help.
+The `share_path` is `owner/repo/slug` (e.g., `mblode/starter-shares/fix-nextjs-hydration-dynamic-imports`). Use `"outcome": "success"` if the fix resolved the problem, or `"outcome": "failure"` if it did not help.
+
+If the API request fails (network error, 5xx, timeout), skip the outcome report silently and continue helping the user. Outcome reporting is optional — never let a failed report block the user's workflow.
 
 ## Share Back
 
