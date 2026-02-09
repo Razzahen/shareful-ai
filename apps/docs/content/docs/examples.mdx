@@ -3,15 +3,13 @@ title: Examples
 description: Annotated good and bad SHARE.md examples showing what makes a share effective and common mistakes to avoid.
 ---
 
-Use these annotated examples to calibrate quality when writing or reviewing a `SHARE.md` file. Each example explains what works and what doesn't.
+Annotated examples of good and bad shares. Use them to calibrate quality.
 
 ## Good example: fix type
 
-This share fixes Prisma N+1 queries. It demonstrates a well-structured fix with multiple solution options.
+A well-structured fix for Prisma N+1 queries.
 
 ### Frontmatter
-
-The frontmatter names the technology, describes the symptom, and uses the correct solution type.
 
 ```yaml
 ---
@@ -28,12 +26,10 @@ environment:
 ```
 
 <Callout type="info">
-**What makes this good:** The title starts with "Fix" matching `solution_type: fix`, names the technology (Prisma), and describes the specific problem (N+1). The problem field includes the observable symptom ("hundreds of individual queries"), making it searchable. Tags cover technology, domain, and pattern.
+**Good because:** Title verb matches `solution_type`. Problem field includes the observable symptom for search. Tags cover technology, domain, and descriptor.
 </Callout>
 
 ### Problem section
-
-The Problem section shows a minimal reproduction with quantified impact.
 
 ```markdown
 ## Problem
@@ -54,12 +50,10 @@ With 100 posts, this generates 101 database queries.
 ```
 
 <Callout type="info">
-**What makes this good:** Shows the broken code as a minimal reproduction, quantifies the impact ("101 database queries"), and does not explain the fix -- only the broken state.
+**Good because:** Minimal reproduction, quantified impact, no fix leakage.
 </Callout>
 
 ### Solution section
-
-The Solution section provides three labeled options with a recommended default.
 
 ```markdown
 ## Solution
@@ -95,7 +89,7 @@ const posts = await prisma.post.findMany({
 ```
 
 <Callout type="info">
-**What makes this good:** Three clearly labeled options with a recommended default. Option 3 notes the version requirement in its label. Each code block has the `typescript` language label and is complete.
+**Good because:** Labeled options, recommended default, version noted in Option 3 label, complete code with language labels.
 </Callout>
 
 ### Why It Works section
@@ -103,12 +97,10 @@ const posts = await prisma.post.findMany({
 The share explains that Prisma does not load relations by default, that the N+1 arises from manual looping, and that `include` changes the behavior to use an `IN` clause. It also explains how `relationLoadStrategy: "join"` uses a SQL `JOIN` instead.
 
 <Callout type="info">
-**What makes this good:** Explains the root cause (default lazy behavior), not just "add include." Describes the actual SQL mechanism (`IN` clause vs `JOIN`). Written as prose, not code.
+**Good because:** Explains root cause (default lazy behavior), not just "add include." Describes the SQL mechanism. Written as prose.
 </Callout>
 
 ### Context section
-
-The Context section lists version requirements, debugging tips, and related patterns.
 
 ```markdown
 ## Context
@@ -120,18 +112,12 @@ The Context section lists version requirements, debugging tips, and related patt
 ```
 
 <Callout type="info">
-**What makes this good:** Version requirements listed first. Includes a debugging tip (query logging) and related patterns (GraphQL). Formatted as a bulleted list where each bullet adds unique information.
+**Good because:** Version requirements first. Includes debugging tip and related patterns. Each bullet adds unique information.
 </Callout>
 
 ---
 
 ## Good example: pattern type
-
-This share demonstrates the TypeScript `satisfies` operator for type-safe config objects.
-
-### Frontmatter
-
-The frontmatter uses a title verb matching the pattern solution type and specifies the minimum TypeScript version.
 
 ```yaml
 ---
@@ -148,20 +134,16 @@ environment:
 ```
 
 <Callout type="info">
-**What makes this good:** Title starts with "Use" matching `solution_type: pattern`. The problem describes the technical symptom ("widens types and loses literal inference"). Version is quoted as `"4.9+"` (proper YAML for a value starting with a number).
+**Good because:** Title verb "Use" matches `solution_type: pattern`. Problem describes the technical symptom. Version quoted correctly.
 </Callout>
 
-The Problem section shows a concrete `Routes` type and demonstrates how a type annotation widens the inferred type. The Solution builds from simple (`satisfies` alone) to advanced (`satisfies` + `as const`), with comments showing the inferred types so readers can see the difference. The Why It Works section explains the mechanism in two focused paragraphs.
+The body follows the same structure: Problem shows type widening with a concrete `Routes` type, Solution progresses from `satisfies` to `satisfies` + `as const`, and Why It Works explains in two paragraphs.
 
 ---
 
 ## Common mistakes
 
-Avoid these patterns when writing shares.
-
 ### Bad frontmatter
-
-This frontmatter violates multiple format rules at once.
 
 ```yaml
 ---
@@ -175,12 +157,10 @@ created: Feb 8
 ```
 
 <Callout type="error">
-**Problems:** Title is vague with no technology or symptom. Slug has uppercase and underscores (must match `/^[a-z0-9-]+$/`). Tags include uppercase, more than 10 items, and vague terms. Problem is a single word with no actual symptom. Solution type says `pattern` but the title says "fix." Date format is wrong (must be `YYYY-MM-DD`).
+**Problems:** Vague title. Slug has uppercase and underscores. Tags include uppercase and exceed 10 items. Problem has no symptom. Type/title mismatch. Wrong date format.
 </Callout>
 
 ### Bad Problem section
-
-This Problem section reads like a blog post instead of showing the broken state.
 
 ```markdown
 ## Problem
@@ -192,12 +172,10 @@ trying many different things.
 ```
 
 <Callout type="error">
-**Problems:** No code shown, no error message, no quantified impact. Reads like a blog introduction. Talks about the solution instead of showing the broken state.
+**Problems:** No code, no error message, no impact. Reads like a blog post. Discusses the solution instead of showing the broken state.
 </Callout>
 
 ### Bad Solution section
-
-This Solution section is incomplete and lacks a language label.
 
 ````markdown
 ## Solution
@@ -210,12 +188,10 @@ prisma.post.findMany({ include: { author: true } })
 ````
 
 <Callout type="error">
-**Problems:** Code block has no language label (should be `typescript`). Snippet is incomplete (no `await`, no `const`). Explanation mixed into solution text instead of code comments. Does not show the full working code.
+**Problems:** No language label. Incomplete snippet (no `await`, no `const`). Explanation mixed into text instead of code comments.
 </Callout>
 
 ### Bad Why It Works section
-
-This section restates the solution instead of explaining the root cause.
 
 ```markdown
 ## Why It Works
@@ -226,12 +202,10 @@ Prisma documentation for more information.
 ```
 
 <Callout type="error">
-**Problems:** Restates the solution ("we added include") instead of explaining the mechanism. Does not explain why `include` fixes the N+1 problem. Defers to external docs instead of explaining here.
+**Problems:** Restates the solution instead of explaining the mechanism. Defers to external docs.
 </Callout>
 
 ### Bad Context section
-
-This Context section is a paragraph that repeats the explanation instead of listing environment details.
 
 ```markdown
 ## Context
@@ -244,23 +218,19 @@ and is the recommended approach for loading related data.
 ```
 
 <Callout type="error">
-**Problems:** Written as a paragraph instead of a bulleted list. Repeats the solution explanation (belongs in Why It Works). No specific version numbers, no gotchas, no related tools.
+**Problems:** Paragraph instead of bullets. Repeats the solution explanation. No version numbers, no gotchas, no related tools.
 </Callout>
 
 ---
 
 ## Quality checklist
 
-Run through this checklist before publishing a share:
+Run through this before publishing. Machine-checkable rules (character limits, format constraints) are caught by `npx shareful-ai check`.
 
 **Frontmatter:**
-- Title starts with a verb matching `solution_type` (Fix, Use, Configure)
-- Title is specific (names technology and problem), under 128 characters
-- Slug matches the parent directory name, lowercase with hyphens only, under 64 characters
-- Tags are 1-10 items, all lowercase, each under 32 characters
-- Problem field includes the error message or observable symptom, under 256 characters
-- `solution_type` matches the title verb and content
-- `created` is `YYYY-MM-DD` format
+- Title names the technology and problem, verb matches `solution_type`
+- Problem field includes the error message or observable symptom
+- `solution_type` matches the content, not just the title
 
 **Problem section:**
 - Shows broken code with a minimal reproduction
@@ -270,25 +240,18 @@ Run through this checklist before publishing a share:
 **Solution section:**
 - All code blocks have language labels
 - Code is complete and runnable (not fragments)
-- Multiple options are labeled with "(recommended)" on the default
+- Multiple options labeled with "(recommended)" on the default
 
 **Why It Works section:**
 - Explains the root cause, not just restates the fix
 - Written as prose (1-3 paragraphs)
-- Covers why the default behavior causes the problem
 
 **Context section:**
 - Formatted as a bulleted list
 - Version requirements listed first
 - Includes at least one gotcha or limitation
 
-**Overall:**
-- Body is under 300 lines
-- All four required sections present in order
-- No placeholder content
-
 ## Next steps
 
-- Read the [share format specification](/docs/share-format) for field constraints and validation rules
-- Follow the [creating shares](/docs/creating-shares) guide
-- Use `npx shareful-ai check` to validate your shares before publishing
+- [Share format specification](/docs/share-format) -- field constraints and validation rules
+- [Creating shares](/docs/creating-shares) -- writing tips

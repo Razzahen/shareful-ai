@@ -1,132 +1,24 @@
 ---
-title: Frequently asked questions
-description: Common questions about Shareful, the CLI, shares, and the platform.
+title: FAQ
+description: Quick answers to common questions about Shareful.
 ---
-
-Find answers to common questions about creating shares, using the CLI, publishing, validation, and telemetry. If your question isn't covered here, [open an issue on GitHub](https://github.com/shareful-ai/shareful-ai).
-
-## What is Shareful?
-
-Shareful is an open-source platform for sharing AI coding solutions. Developers capture solutions as structured markdown files (`SHARE.md`) in GitHub repositories. The `shareful-ai` CLI handles creation, validation, and search.
-
-## What is a share?
-
-A share is a `SHARE.md` file that captures a coding solution with YAML frontmatter and four required body sections. See [What is a share?](/docs/what-is-a-share) for a full explanation of how shares work and why the format matters.
 
 ## How do I install the CLI?
 
-The CLI runs directly with `npx`, so no installation is required:
-
-```bash
-npx shareful-ai init my-shares
-```
-
-Or install it globally:
+Run directly with `npx` (no install needed) or install globally:
 
 ```bash
 npm install -g shareful-ai
 ```
 
-## How do I create a share?
+## What Node.js version do I need?
 
-Run `npx shareful-ai create` for interactive mode, or pass flags directly:
-
-```bash
-npx shareful-ai create \
-  --title "Fix auth redirect loop" \
-  --problem "Login page redirects back to itself after successful auth" \
-  --tags "auth,nextjs" \
-  --type fix
-```
-
-See the [creating shares](/docs/creating-shares) guide for a full walkthrough.
-
-## How do I publish my shares?
-
-Validate your shares with `npx shareful-ai check`, then push to GitHub:
-
-```bash
-npx shareful-ai check
-git add -A && git commit -m "Add share" && git push
-```
-
-## How do I validate my shares?
-
-Run `npx shareful-ai check` to validate all `SHARE.md` files in the current repository. The CLI checks frontmatter fields, body sections, and slug-directory alignment. It exits with code 1 if any share fails.
-
-## How do I install agent skills?
-
-Run `npx shareful-ai skills` to install Shareful agent skills globally. These work with Claude Code, Cursor, Windsurf, and other AI coding agents.
-
-## What are the five solution types?
-
-| Type | Use when |
-| --- | --- |
-| `fix` | You found a direct solution to a bug or error |
-| `workaround` | The upstream issue exists but you found a way around it |
-| `pattern` | You're sharing a reusable approach or best practice |
-| `reference` | You're documenting configuration or reference material |
-| `config` | The solution is about configuration or environment setup |
-
-## Which AI agents work with Shareful?
-
-Shareful ships two lightweight CLI skills that work with Claude Code, Cursor, Windsurf, and any agent that supports skills. The `shareful-search` skill searches community-verified solutions on-demand. The `shareful-create` skill guides agents through capturing a fix as a share.
-
-## Why does Shareful use skills instead of MCP?
-
-Agent skills are CLI tools your agent calls directly — no server process, no protocol handshake, no extra dependencies. One command installs both skills. MCP requires a running server, connection management, and protocol-specific integration. Skills are simpler to set up, lighter on tokens, and work with any agent.
-
-## How does search work?
-
-Run `npx shareful-ai search <query>` to search across all published shares on shareful.ai. You can filter by solution type and tags. See [finding shares](/docs/finding-shares) for examples.
-
-## Is any personal data collected?
-
-No. The CLI collects anonymous telemetry that tracks aggregate actions (`share`, `init`, `check`, `add-skills`) without any personal information, IP addresses, or device identifiers. You can opt out by setting `DISABLE_TELEMETRY=1` or `DO_NOT_TRACK=1`.
+Node.js 18 or later.
 
 ## Can I opt out of telemetry?
 
-Yes. Set either environment variable:
-
-```bash
-export DISABLE_TELEMETRY=1
-# or
-export DO_NOT_TRACK=1
-```
-
-See [configuration](/docs/configuration) for more details.
-
-## What are the validation rules?
-
-The CLI validates shares when you run `npx shareful-ai check`:
-
-- Title: required, max 128 characters
-- Slug: required, max 64 characters, lowercase alphanumeric with hyphens
-- Tags: 1-10 tags, each lowercase, max 32 characters
-- Problem: required, max 256 characters
-- Solution type: must be `fix`, `workaround`, `pattern`, `reference`, or `config`
-- Body: max 300 lines, must include all four required sections
-
-See the [share format](/docs/share-format) specification for the complete rules.
-
-## Where is user configuration stored?
-
-The CLI stores user settings at `~/.shareful/config.json`. See [configuration](/docs/configuration) for all options.
-
-## What Node.js version do I need?
-
-Node.js 18 or later is required.
-
-## Where can I see example shares?
-
-The [examples](/docs/examples) page has annotated good and bad shares with commentary explaining what makes each effective or problematic. It also includes a quality checklist to run through before publishing.
+Yes. Set `DISABLE_TELEMETRY=1` or `DO_NOT_TRACK=1`. See [configuration](/docs/configuration#telemetry) for details.
 
 ## How do I report a bug?
 
-Open an issue on the [GitHub repository](https://github.com/shareful-ai/shareful-ai).
-
-## Next steps
-
-- Read [What is a share?](/docs/what-is-a-share) for a full explanation of how shares work
-- Follow the [creating shares](/docs/creating-shares) guide to write your first share
-- See the [share format specification](/docs/share-format) for field constraints and validation rules
+[Open an issue on GitHub](https://github.com/shareful-ai/shareful-ai).

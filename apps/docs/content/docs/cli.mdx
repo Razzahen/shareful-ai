@@ -3,7 +3,7 @@ title: CLI reference
 description: Complete reference for all shareful-ai CLI commands, flags, and options.
 ---
 
-The `shareful-ai` CLI runs directly with `npx`. No global installation is required.
+Run with `npx` (no install needed) or install globally with `npm install -g shareful-ai`.
 
 ```bash
 npx shareful-ai <command> [options]
@@ -13,7 +13,7 @@ npx shareful-ai <command> [options]
 
 ### `init`
 
-Create a new shares repository with the required directory structure.
+Create a new shares repository.
 
 ```bash
 npx shareful-ai init [name]
@@ -23,14 +23,12 @@ npx shareful-ai init [name]
 
 | Argument | Description |
 | --- | --- |
-| `name` | Directory name for the repository (defaults to `shares` if omitted) |
+| `name` | Directory name (defaults to `shares`) |
 
 **What it creates:**
 
-- A `shares/` directory with an example share
-- A `.gitignore` file
-- A `README.md` with setup instructions
-- An `AGENTS.md` with repository documentation
+- `shares/` directory with an example share
+- `.gitignore`, `README.md`, and `AGENTS.md`
 - A git repository
 
 **Example:**
@@ -44,7 +42,7 @@ cd my-solutions
 
 ### `create`
 
-Create a new `SHARE.md` file. Runs interactively when called without flags, or accepts flags for non-interactive use.
+Create a new `SHARE.md` file. Without flags, runs interactively.
 
 ```bash
 npx shareful-ai create [options]
@@ -56,7 +54,7 @@ npx shareful-ai create [options]
 | --- | --- |
 | `-t, --title <title>` | Share title (max 128 characters) |
 | `-p, --problem <problem>` | One-sentence problem description (max 256 characters) |
-| `--tags <tags>` | Comma-separated tags (1-10 tags, max 32 characters each) |
+| `--tags <tags>` | Comma-separated tags (1-10, max 32 characters each) |
 | `--type <type>` | Solution type: `fix`, `workaround`, `pattern`, `reference`, or `config` |
 
 **Interactive mode:**
@@ -65,11 +63,11 @@ npx shareful-ai create [options]
 npx shareful-ai create
 ```
 
-The CLI walks you through each field with prompts and validation.
+Prompts you for each field with validation.
 
 **Non-interactive mode:**
 
-Provide all four flags to skip prompts:
+Pass all four flags to skip prompts:
 
 ```bash
 npx shareful-ai create \
@@ -79,9 +77,7 @@ npx shareful-ai create \
   --type fix
 ```
 
-**Output:**
-
-Creates a `shares/<slug>/SHARE.md` file with YAML frontmatter and section templates ready to fill in.
+Creates `shares/<slug>/SHARE.md` with frontmatter and section templates.
 
 ---
 
@@ -130,13 +126,7 @@ Validate all `SHARE.md` files in the current repository.
 npx shareful-ai check
 ```
 
-Scans every `shares/*/SHARE.md` file and validates:
-
-- All required frontmatter fields are present and within limits
-- The slug matches the parent directory name
-- All four required body sections exist (`## Problem`, `## Solution`, `## Why It Works`, `## Context`)
-
-Displays each share with a `+` (valid) or `x` (error) indicator. Exits with code 1 if any share fails validation.
+Validates every `shares/*/SHARE.md` file: frontmatter fields, slug-directory match, and the four required body sections. Exits with code 1 if any share fails.
 
 **Example output:**
 
@@ -152,13 +142,11 @@ Displays each share with a `+` (valid) or `x` (error) indicator. Exits with code
 
 ### `skills`
 
-Install Shareful agent skills globally for AI coding agents.
+Install the `shareful-search` and `shareful-create` agent skills. Works with Claude Code, Cursor, Windsurf, and others.
 
 ```bash
 npx shareful-ai skills
 ```
-
-Runs `npx skills add shareful-ai/skills --all -g` to install skills that work with Claude Code, Cursor, Windsurf, and other agents.
 
 ---
 
@@ -180,27 +168,10 @@ npx shareful-ai --version
 
 ## Telemetry
 
-The CLI collects anonymous telemetry to improve the platform. No personal information, IP addresses, or device identifiers are collected.
-
-**Events tracked:**
-
-| Event | Data |
-| --- | --- |
-| `share` | Share slug, share count |
-| `init` | Repository name |
-| `check` | Valid count, error count |
-| `add-skills` | None |
-
-To opt out, set either environment variable:
-
-```bash
-export DISABLE_TELEMETRY=1
-# or
-export DO_NOT_TRACK=1
-```
+The CLI collects anonymous, non-identifying usage events. Set `DISABLE_TELEMETRY=1` to opt out. See [configuration](/docs/configuration#telemetry) for details.
 
 ## Next steps
 
-- Learn the [share format](/docs/share-format) specification
-- Follow the [creating shares](/docs/creating-shares) guide
-- Read about [configuration](/docs/configuration) options
+- [Share format specification](/docs/share-format) -- field constraints and validation rules
+- [Creating shares](/docs/creating-shares) -- writing tips and quality standards
+- [Configuration](/docs/configuration) -- settings and environment variables

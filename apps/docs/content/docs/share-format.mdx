@@ -3,8 +3,6 @@ title: Share format specification
 description: The complete SHARE.md format specification with field constraints, validation rules, and section-writing guidance.
 ---
 
-This page defines the complete `SHARE.md` format. Use it as a reference when writing or validating shares.
-
 ## File structure
 
 A share lives in a directory named after its slug inside the `shares/` folder:
@@ -25,15 +23,13 @@ The frontmatter contains structured metadata in YAML format, enclosed by `---` d
 
 ### `title`
 
-The title is the human-readable name for a share.
-
 | Constraint | Value |
 | --- | --- |
 | Type | string |
 | Max length | 128 characters |
 | Required | Yes |
 
-A human-readable title describing the solution. Start with a verb that matches the `solution_type`:
+Start with a verb that matches the `solution_type`:
 
 | solution_type | Verb convention | Example |
 | --- | --- | --- |
@@ -47,7 +43,6 @@ Good titles:
 
 ```yaml
 title: "Fix Docker build cache invalidation for node_modules"
-title: "Fix Next.js hydration error with dynamic imports"
 title: "Use TypeScript satisfies operator for type-safe config objects"
 ```
 
@@ -55,13 +50,12 @@ Bad titles:
 
 ```yaml
 title: "Fix bug"          # Too vague, no technology or symptom
-title: "TypeScript"        # Not a sentence, no verb, no problem
 title: "fix prisma"        # No capitalization, no specifics
 ```
 
 ### `slug`
 
-The slug is a kebab-case identifier used as the directory name and URL path.
+A kebab-case identifier that doubles as the directory name and URL path.
 
 | Constraint | Value |
 | --- | --- |
@@ -70,9 +64,7 @@ The slug is a kebab-case identifier used as the directory name and URL path.
 | Pattern | `/^[a-z0-9-]+$/` |
 | Required | Yes |
 
-The slug must match the parent directory name exactly.
-
-The CLI generates slugs from titles automatically:
+Must match the parent directory name exactly. The CLI generates slugs from titles automatically:
 
 1. Convert to lowercase
 2. Strip characters that are not `a-z`, `0-9`, spaces, or hyphens
@@ -97,15 +89,11 @@ slug: fix-docker-node-modules-layer-cache
 Bad slugs:
 
 ```yaml
-slug: Fix-Prisma           # Uppercase letters not allowed
-slug: fix_prisma_queries    # Underscores not allowed
-slug: fix prisma            # Spaces not allowed
-slug: fix-prisma-n+1        # Special characters not allowed
+slug: Fix-Prisma           # Uppercase not allowed
+slug: fix_prisma_queries    # Underscores not allowed; use hyphens
 ```
 
 ### `tags`
-
-Tags are lowercase keywords that make shares discoverable through search.
 
 | Constraint | Value |
 | --- | --- |
@@ -116,7 +104,7 @@ Tags are lowercase keywords that make shares discoverable through search.
 | Case | Lowercase only |
 | Required | Yes |
 
-Tags make shares discoverable. Cover three categories:
+Cover three categories:
 
 1. **Primary technology** -- the main language, framework, or tool (`prisma`, `nextjs`, `docker`)
 2. **Problem domain** -- the area of concern (`performance`, `hydration`, `cache`)
@@ -127,7 +115,6 @@ Good tags:
 ```yaml
 tags: [prisma, database, performance, n-plus-one]
 tags: [nextjs, react, hydration, ssr]
-tags: [typescript, satisfies, type-safety, config]
 ```
 
 Bad tags:
@@ -135,13 +122,9 @@ Bad tags:
 ```yaml
 tags: []                    # At least 1 tag required
 tags: [Prisma]              # Must be lowercase
-tags: [prisma, database, performance, n-plus-one, sql, orm, backend, server, node, typescript, fix]
-                            # More than 10 tags
 ```
 
 ### `problem`
-
-The problem field is a one-sentence summary used for search indexing.
 
 | Constraint | Value |
 | --- | --- |
@@ -149,14 +132,13 @@ The problem field is a one-sentence summary used for search indexing.
 | Max length | 256 characters |
 | Required | Yes |
 
-A one-sentence summary of the problem. This field is used for search indexing, so include the actual error message, symptom, or observable behavior.
+One sentence describing the problem. Include the error message or symptom -- this field powers search.
 
 Good problem fields:
 
 ```yaml
 problem: "Prisma makes hundreds of individual queries when loading related data in a loop"
 problem: "Docker rebuilds node_modules from scratch on every code change, making builds slow"
-problem: "Type annotation on config object widens types and loses literal inference"
 ```
 
 Bad problem fields:
@@ -164,20 +146,15 @@ Bad problem fields:
 ```yaml
 problem: "Something is broken"    # No specifics, no error message
 problem: "It doesn't work"        # Completely unhelpful
-problem: "I have a problem"       # Describes having a problem, not the problem
 ```
 
 ### `solution_type`
-
-The solution type categorizes how the share addresses the problem.
 
 | Constraint | Value |
 | --- | --- |
 | Type | enum |
 | Values | `fix`, `workaround`, `pattern`, `reference`, `config` |
 | Required | Yes |
-
-Categorizes how the share addresses the problem:
 
 | Value | Description | When to use |
 | --- | --- | --- |
@@ -191,15 +168,13 @@ Most shares are `fix`. When in doubt between `fix` and `pattern`, choose `fix`.
 
 ### `created`
 
-The created field records when the share was first written.
-
 | Constraint | Value |
 | --- | --- |
 | Type | string |
 | Format | `YYYY-MM-DD` |
 | Required | Yes |
 
-The date the share was created. Use today's date. Quote the value in YAML if it starts with a number:
+Use today's date. Quote the value in YAML:
 
 ```yaml
 created: "2026-02-08"
@@ -211,7 +186,7 @@ These fields add context but are not required for validation.
 
 ### `environment`
 
-An object specifying the technical context where the solution applies. Recommended for all shares.
+Technical context for the solution. Recommended.
 
 ```yaml
 environment:
@@ -220,15 +195,15 @@ environment:
   version: "14+"
 ```
 
-All three sub-fields (`language`, `framework`, `version`) are optional. Quote `version` in YAML if it starts with a number.
+All three sub-fields (`language`, `framework`, `version`) are optional. Quote `version` if it starts with a number.
 
 ### `ai_provider`
 
-Indicates which AI assistant helped create or verify the solution. Only set this if an AI was meaningfully involved. Values: `"claude"`, `"gpt"`, `"gemini"`.
+Which AI assistant helped create or verify the solution. Set only if an AI was meaningfully involved. Values: `"claude"`, `"gpt"`, `"gemini"`.
 
 ### `related`
 
-An array of slugs linking to related or complementary shares:
+An array of slugs linking to related shares:
 
 ```yaml
 related:
@@ -238,11 +213,11 @@ related:
 
 ### `verified`
 
-A boolean indicating whether the share has been verified by the shareful.ai platform. This field is set automatically based on user outcome reports. Do not set it manually.
+Whether the share has been verified. Set automatically from outcome reports -- do not set manually.
 
 ### `updated`
 
-An ISO date (`YYYY-MM-DD`) for when the share was last updated.
+ISO date (`YYYY-MM-DD`) for when the share was last updated.
 
 ## Complete frontmatter example
 
@@ -265,7 +240,7 @@ related:
 
 ## Body sections
 
-The markdown body must contain exactly four sections in this order. The total body must be under 300 lines. Aim for 60-150 lines.
+The markdown body must contain exactly four sections in this order. Total body must be under 300 lines. Aim for 60-150 lines.
 
 ### Problem
 
@@ -273,9 +248,9 @@ Show the broken state so readers can confirm they have the same issue.
 
 **Must include:**
 
-- **Broken code** -- a minimal code snippet that reproduces the issue
-- **Error message or symptom** -- the exact error text, incorrect output, or observable bad behavior
-- **Impact** -- quantify when possible ("101 queries instead of 2", "builds take 5 minutes")
+- Broken code -- minimal reproduction
+- Error message or symptom -- exact text
+- Impact -- quantify when possible ("101 queries instead of 2")
 
 **Template:**
 
@@ -292,19 +267,19 @@ Show the broken state so readers can confirm they have the same issue.
 ```
 
 <Callout type="warn">
-**Avoid:** No code shown. No error message. Too much context (entire application instead of minimal reproduction). Explaining the solution in the Problem section.
+**Avoid:** Missing code or error message. Entire application instead of minimal reproduction. Explaining the solution here.
 </Callout>
 
 ### Solution
 
-Provide working code that readers can copy and apply with minor adaptation.
+Provide working code that readers can copy and apply.
 
 **Must include:**
 
-- **Complete, runnable code blocks** -- each with a language label
-- **Multiple options when applicable** -- label with "Option 1", "Option 2"
-- **Recommended hint** -- mark the best default with "(recommended)"
-- **Inline comments** -- explain non-obvious lines
+- Complete, runnable code blocks with language labels
+- Multiple options when applicable, labeled "Option 1", "Option 2"
+- "(recommended)" on the best default
+- Inline comments on non-obvious lines
 
 **Template for multiple options:**
 
@@ -335,18 +310,18 @@ Provide working code that readers can copy and apply with minor adaptation.
 ```
 
 <Callout type="warn">
-**Avoid:** No language label on code blocks. Incomplete snippets ("just add `include`" without context). No recommended option when showing multiple approaches. Placeholder code like `// Add your code here`.
+**Avoid:** Missing language labels. Incomplete snippets. No "(recommended)" when showing multiple options. Placeholder code.
 </Callout>
 
 ### Why It Works
 
-Explain the underlying mechanism so readers understand the root cause, not just the fix. Answer "why was it broken?" and "why does the fix resolve it?"
+Explain the root cause, not just the fix. Answer "why was it broken?" and "why does the fix resolve it?"
 
 **Must include:**
 
-- **Root cause explanation** -- what was happening under the hood
-- **Mechanism of the fix** -- why the change resolves the root cause
-- **1-3 paragraphs of prose** -- this section is primarily text, not code
+- Root cause explanation
+- Why the change resolves it
+- 1-3 paragraphs of prose (primarily text, not code)
 
 **Template:**
 
@@ -361,18 +336,18 @@ Explain the underlying mechanism so readers understand the root cause, not just 
 ```
 
 <Callout type="warn">
-**Avoid:** Restating the solution ("It works because we added `include`"). Linking to external docs instead of explaining here. Too short ("This fixes the bug."). Code-heavy content (save code for the Solution section).
+**Avoid:** Restating the solution ("It works because we added `include`"). Linking to external docs instead of explaining. Too short ("This fixes the bug."). Code-heavy content.
 </Callout>
 
 ### Context
 
-Help readers determine if the solution applies to their environment and warn about edge cases.
+Help readers determine if the solution applies to their environment.
 
 **Must include:**
 
-- **Version requirements** -- list first
-- **Gotchas** -- edge cases, limitations, or scenarios where the solution does not apply
-- **Related tools or alternatives** -- other approaches or debugging aids
+- Version requirements (list first)
+- Gotchas, limitations, or edge cases
+- Related tools or alternatives
 
 **Template:**
 
@@ -390,8 +365,6 @@ Help readers determine if the solution applies to their environment and warn abo
 
 ## Section length guidelines
 
-Keep each section within these line-count ranges to maintain readability.
-
 | Section | Target lines | Maximum lines |
 | --- | --- | --- |
 | Problem | 5-20 | 40 |
@@ -400,33 +373,22 @@ Keep each section within these line-count ranges to maintain readability.
 | Context | 3-8 | 15 |
 | **Total body** | **60-150** | **300** |
 
-## Validation rules
+## Validation
 
-The CLI validates shares when you run `npx shareful-ai check`. A share must meet all of these requirements:
+`npx shareful-ai check` validates every `shares/*/SHARE.md` file:
 
-- **Title**: Required, max 128 characters
-- **Slug**: Required, max 64 characters, matches pattern `^[a-z0-9-]+$`, matches the directory name
-- **Tags**: 1-10 tags, each lowercase, max 32 characters
-- **Problem**: Required, max 256 characters
-- **Solution type**: Must be one of the five valid types
-- **Created**: Required, `YYYY-MM-DD` format
-- **Body**: Max 300 lines, must contain all four required sections (`## Problem`, `## Solution`, `## Why It Works`, `## Context`)
-
-## Validation errors
-
-Run `npx shareful-ai check` to validate all shares. Common errors and how to fix them:
-
-| Error | Fix |
+| Field | Rule |
 | --- | --- |
-| Missing title | Add a `title` field to your frontmatter |
-| Slug mismatch | Ensure the `slug` field matches the parent directory name |
-| Too many tags | Use 10 or fewer tags |
-| Missing section | Add all four required sections: Problem, Solution, Why It Works, Context |
-| Body too long | Keep the body under 300 lines |
-| Invalid solution type | Use one of: `fix`, `workaround`, `pattern`, `reference`, `config` |
+| `title` | Required, max 128 characters |
+| `slug` | Required, max 64 characters, `/^[a-z0-9-]+$/`, must match directory name |
+| `tags` | 1-10 tags, each lowercase, max 32 characters |
+| `problem` | Required, max 256 characters |
+| `solution_type` | One of: `fix`, `workaround`, `pattern`, `reference`, `config` |
+| `created` | Required, `YYYY-MM-DD` |
+| Body | Max 300 lines, all four sections present in order |
 
 ## Next steps
 
-- Follow the [creating shares](/docs/creating-shares) guide for best practices
-- Browse [examples](/docs/examples) of good and bad shares
-- See the [CLI reference](/docs/cli) for all command options
+- [Creating shares](/docs/creating-shares) -- writing tips and quality standards
+- [Examples](/docs/examples) -- annotated good and bad shares
+- [CLI reference](/docs/cli)

@@ -3,23 +3,13 @@ title: Configuration
 description: Configure the shareful-ai CLI with user settings and environment variables.
 ---
 
-The CLI uses a combination of user-level configuration and environment variables.
-
 ## User configuration
 
-The CLI stores user settings at:
-
-```
-~/.shareful/config.json
-```
-
-### Configuration fields
+The CLI stores settings at `~/.shareful/config.json`.
 
 | Field | Type | Description |
 | --- | --- | --- |
 | `sharesRepo` | string | Default path to your shares repository |
-
-### Example
 
 ```json
 {
@@ -27,31 +17,13 @@ The CLI stores user settings at:
 }
 ```
 
-When `sharesRepo` is set, the CLI uses it as the default repository location. Otherwise, it uses the current working directory.
+When set, the CLI defaults to this repository path instead of the current directory.
 
-## Environment variables
+## Telemetry
 
-| Variable | Description |
-| --- | --- |
-| `DISABLE_TELEMETRY` | Set to `1` to disable anonymous telemetry |
-| `DO_NOT_TRACK` | Set to `1` to disable anonymous telemetry (alternative) |
+The CLI collects anonymous telemetry by default. No personal information, IP addresses, or device identifiers are collected.
 
-### Disabling telemetry
-
-The CLI collects anonymous telemetry by default to help improve the platform. To opt out, set either variable in your shell profile:
-
-```bash
-# Add to ~/.bashrc, ~/.zshrc, or equivalent
-export DISABLE_TELEMETRY=1
-```
-
-Or set it for a single command:
-
-```bash
-DISABLE_TELEMETRY=1 npx shareful-ai create
-```
-
-### What telemetry collects
+**Events tracked:**
 
 | Event | Data |
 | --- | --- |
@@ -60,22 +32,20 @@ DISABLE_TELEMETRY=1 npx shareful-ai create
 | `check` | Valid count, error count |
 | `add-skills` | None |
 
-No personal information, IP addresses, or device identifiers are collected.
+**To opt out**, set either variable in your shell profile:
 
-## Directory structure
-
-A shares repository follows this structure:
-
-```
-my-shares/
-  shares/
-    fix-nextjs-hydration/
-      SHARE.md
-    prisma-pooling/
-      SHARE.md
+```bash
+# Add to ~/.bashrc, ~/.zshrc, or equivalent
+export DISABLE_TELEMETRY=1
+# or
+export DO_NOT_TRACK=1
 ```
 
-The `shares/` directory name and the `SHARE.md` filename are constants defined by the CLI and cannot be changed.
+Or set it for a single command:
+
+```bash
+DISABLE_TELEMETRY=1 npx shareful-ai create
+```
 
 ## Requirements
 
@@ -83,8 +53,12 @@ The `shares/` directory name and the `SHARE.md` filename are constants defined b
 - **Git** for version control
 - **GitHub** repository (for indexing and discovery)
 
+## Support
+
+[Open an issue on GitHub](https://github.com/shareful-ai/shareful-ai) to report bugs or request features.
+
 ## Next steps
 
-- Read the [CLI reference](/docs/cli) for all commands
-- Learn how to [create shares](/docs/creating-shares)
-- See [finding shares](/docs/finding-shares) for search options
+- [CLI reference](/docs/cli) -- all commands and flags
+- [Creating shares](/docs/creating-shares) -- writing tips and quality standards
+- [Finding shares](/docs/finding-shares) -- search tips and API

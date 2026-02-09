@@ -1,19 +1,17 @@
 ---
 title: What is a share?
-description: Understand what shares are, how they work, and why the structured format helps developers and AI agents solve problems faster.
+description: What shares are, how they work, and why the structured format matters.
 ---
 
-A share is a structured markdown file (`SHARE.md`) that captures a coding solution in a format that both humans and AI agents can discover, read, and apply. Each share documents a single fix, workaround, pattern, or configuration in a GitHub repository.
-
-This page explains how shares work and why the format matters.
+A share is a structured markdown file (`SHARE.md`) that captures a coding solution both humans and AI agents can discover, read, and apply. Each share documents a single fix, workaround, pattern, or configuration in a GitHub repository.
 
 ## How shares work
 
-Shares follow a three-step lifecycle from creation to discovery:
+Shares follow a three-step lifecycle:
 
-1. **Create** -- You capture a solution as a `SHARE.md` file in a GitHub repository using the CLI or by writing the file directly.
-2. **Index** -- Shareful indexes published shares from public repositories, extracting metadata for search.
-3. **Discover** -- Developers and AI agents search for solutions by error message, technology, or problem domain using the CLI or the search API.
+1. **Create** -- Capture a solution as a `SHARE.md` file using the CLI or by writing it directly.
+2. **Index** -- Shareful indexes public shares and extracts metadata for search.
+3. **Discover** -- Search for solutions by error message, technology, or problem domain.
 
 ## The SHARE.md file
 
@@ -27,11 +25,10 @@ shares/
     SHARE.md
 ```
 
-A `SHARE.md` file has two parts: YAML frontmatter and a markdown body.
+A `SHARE.md` file has two parts:
 
-The **frontmatter** contains structured metadata -- title, slug, tags, a one-sentence problem description, and the solution type. This metadata powers search and filtering.
-
-The **body** contains four required sections that walk the reader through the problem and its solution:
+- **Frontmatter** -- YAML metadata (title, slug, tags, problem, solution type) that powers search and filtering.
+- **Body** -- four required sections:
 
 | Section | Purpose |
 | --- | --- |
@@ -40,7 +37,7 @@ The **body** contains four required sections that walk the reader through the pr
 | `## Why It Works` | Explain the root cause and why the fix resolves it |
 | `## Context` | List version requirements, gotchas, and alternatives |
 
-Here's a minimal example:
+Minimal frontmatter example:
 
 ```yaml
 ---
@@ -55,29 +52,18 @@ created: "2025-01-15"
 
 ## Solution types
 
-Every share has a `solution_type` that categorizes how it addresses the problem:
-
-| Type | When to use | Title convention |
-| --- | --- | --- |
-| `fix` | The solution permanently resolves the root cause of a bug or error | "Fix ..." |
-| `workaround` | The root cause is upstream or unfixable; this temporarily bypasses it | "Workaround for ..." |
-| `pattern` | A reusable coding pattern or architectural approach that generalizes beyond a single error | "Use ...", "Implement ..." |
-| `reference` | A lookup guide, cheat sheet, or comparison that is informational rather than fixing a specific error | "Guide to ...", "Reference for ..." |
-| `config` | The solution is entirely in configuration files, not application code | "Configure ..." |
-
-Most shares are `fix` type. Use `pattern` only when the solution generalizes beyond a single error.
+Every share has a `solution_type`. Most are `fix`. See the [solution type reference](/docs/share-format#solution_type) for all five types and their title conventions.
 
 ## Why structured format matters
 
-A standardized format provides four benefits:
+The structured format gives you four things:
 
-- **Scannable** -- You know exactly where to find the error message (Problem), the fix (Solution), the explanation (Why It Works), and the caveats (Context).
-- **Searchable** -- YAML frontmatter enables machine-powered search and filtering by tags, solution type, and problem description.
-- **Complete** -- Four mandatory body sections ensure every share includes the problem, the fix, the explanation, and the context. No half-finished solutions.
-- **AI-readable** -- AI agents can parse the structured format, match shares to errors, and apply solutions programmatically.
+- **Scannable** -- Error message, fix, explanation, and caveats are always in the same place.
+- **Searchable** -- YAML frontmatter powers filtering by tags, type, and problem text.
+- **Complete** -- Four mandatory sections prevent half-finished solutions.
+- **AI-readable** -- Agents can parse, match, and apply shares programmatically.
 
 ## Next steps
 
-- Read the [share format specification](/docs/share-format) for field constraints and validation rules
-- Follow the [creating shares](/docs/creating-shares) guide to write your first share
-- Browse [examples](/docs/examples) of good and bad shares
+- [Create your first share](/docs/creating-shares)
+- [See the full format spec](/docs/share-format)

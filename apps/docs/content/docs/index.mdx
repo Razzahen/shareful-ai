@@ -3,7 +3,7 @@ title: Getting started
 description: Install Shareful skills and start sharing AI coding solutions in under a minute.
 ---
 
-Shareful is an open-source CLI that lets developers share verified coding solutions as markdown. Your AI agent discovers them on-demand. This page gets you up and running.
+Shareful is an open-source CLI that lets developers share verified coding solutions as markdown. Your AI agent discovers them on-demand.
 
 ## Quickstart
 
@@ -13,7 +13,7 @@ Shareful is an open-source CLI that lets developers share verified coding soluti
 npx shareful-ai skills
 ```
 
-This adds two agent skills — `shareful-search` and `shareful-create`. Works with Claude Code, Cursor, Windsurf, and more. No server to run, no dependencies to install.
+Installs two agent skills -- `shareful-search` and `shareful-create`. Works with Claude Code, Cursor, Windsurf, and others. No server, no extra dependencies.
 
 ### 2. Initialize a shares repository
 
@@ -22,7 +22,7 @@ npx shareful-ai init my-shares
 cd my-shares
 ```
 
-This creates a directory with the required structure, including a `shares/` folder and an example share. Push it to GitHub as a public repository.
+Creates a directory with a `shares/` folder and an example share. Push to GitHub as a public repo.
 
 ### 3. Create and share a solution
 
@@ -30,7 +30,7 @@ This creates a directory with the required structure, including a `shares/` fold
 npx shareful-ai create
 ```
 
-The CLI walks you through capturing a fix interactively. Or pass flags directly:
+The CLI prompts you for each field. To skip prompts, pass flags:
 
 ```bash
 npx shareful-ai create \
@@ -55,25 +55,25 @@ Your shares are now indexed and discoverable on [shareful.ai](https://shareful.a
 npx shareful-ai search "hydration mismatch nextjs"
 ```
 
-The `shareful-search` skill finds community-verified fixes mid-conversation. Your agent gets focused answers and spends tokens solving, not searching.
+The `shareful-search` skill finds verified fixes mid-conversation so your agent spends tokens solving, not searching.
 
 ## Why skills, not MCP?
 
-Agent skills are plain CLI tools your agent calls directly — no server to run, no protocol negotiation, no extra dependencies. One command installs both skills. MCP requires a running server, connection management, and protocol-specific integration. Skills are simpler to set up, lighter on tokens, and work with any agent.
+Skills are plain CLI tools -- no server, no protocol negotiation, no extra dependencies. One command installs both. MCP requires a running server, connection management, and protocol-specific integration. Skills are lighter on tokens and work with any agent.
 
 ## Learn more
 
 <Cards>
   <Card title="What is a share?" href="/docs/what-is-a-share">
-    Understand how shares work and why the format matters.
+    How shares work and why the format matters.
   </Card>
   <Card title="Creating shares" href="/docs/creating-shares">
-    Step-by-step guide to writing high-quality shares.
+    Write and publish a share step by step.
   </Card>
   <Card title="Finding shares" href="/docs/finding-shares">
-    Search tips, filters, and the search API reference.
+    Search tips, filters, and the API.
   </Card>
   <Card title="Share format specification" href="/docs/share-format">
-    Field constraints, validation rules, and section-writing guidance.
+    Field constraints, validation rules, and writing guidance.
   </Card>
 </Cards>

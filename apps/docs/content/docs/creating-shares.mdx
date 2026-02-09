@@ -3,11 +3,11 @@ title: Creating shares
 description: How to create high-quality shares using the CLI, including interactive mode, CLI flags, and writing tips.
 ---
 
-This guide covers CLI flags, writing tips, and quality standards for shares. For the full quickstart, see [Getting started](/docs).
+For the full quickstart, see [Getting started](/docs).
 
 ## CLI flags
 
-Skip the interactive prompts by passing all four flags directly:
+Skip prompts by passing all four flags:
 
 ```bash
 npx shareful-ai create \
@@ -17,67 +17,48 @@ npx shareful-ai create \
   --type fix
 ```
 
-This is useful for scripting or when you already know the metadata.
-
 ## Writing the body
 
-After the CLI generates the file, open it and fill in the four required sections: Problem, Solution, Why It Works, and Context.
-
-For detailed templates, must-include elements, and anti-patterns for each section, see the [share format specification](/docs/share-format#body-sections).
-
-The key principles:
+After the CLI generates the file, fill in the four body sections. See the [format spec](/docs/share-format#body-sections) for templates and anti-patterns.
 
 - **Problem** -- Show the broken code and error message, not a description of the fix
 - **Solution** -- Provide complete, runnable code with language labels on every code block
-- **Why It Works** -- Explain the root cause in prose, don't just restate the solution
+- **Why It Works** -- Explain the root cause in prose, don't restate the solution
 - **Context** -- Use a bulleted list with version requirements first
 
-## Choosing the right solution type
+## Choose the right solution type
 
-Pick the solution type that best matches how your share addresses the problem.
-
-| Type | Use when... |
-| --- | --- |
-| `fix` | You found a direct solution to a bug or error |
-| `workaround` | The upstream issue exists but you found a way around it |
-| `pattern` | You're sharing a reusable approach or best practice |
-| `reference` | You're documenting configuration, setup, or reference material |
-| `config` | The solution is primarily about configuration files or environment setup |
+Most shares use `fix`. See the [solution type reference](/docs/share-format#solution_type) for all five options and their title conventions.
 
 ## Writing tips
 
-Follow these principles to make your shares useful and discoverable.
-
 **Be specific.** "Fix React error" is too vague. "Fix React hydration mismatch when using browser-only libraries with Next.js 14" tells readers exactly what this solves.
 
-**Include complete code.** Partial snippets frustrate readers. Show the full file or function, not just the changed line.
+**Include complete code.** Show the full file or function, not just the changed line.
 
-**Add error messages.** People search for error messages verbatim. Including the exact error text makes your share more discoverable.
+**Add error messages.** People search for exact error text. Include it verbatim.
 
-**Keep it focused.** One share solves one problem. If you have multiple solutions, create multiple shares.
+**Keep it focused.** One share solves one problem. Multiple solutions? Create multiple shares.
 
-**Tag thoughtfully.** Use specific, lowercase tags. Prefer `nextjs` over `next` and `typescript` over `ts`. Include the framework, language, and key libraries involved.
+**Tag thoughtfully.** Use specific, lowercase tags (`nextjs` not `next`, `typescript` not `ts`). Cover the framework, language, and key libraries.
 
-**Start the title with the right verb.** Match the verb to your `solution_type`: "Fix" for fixes, "Use" or "Implement" for patterns, "Configure" for configs.
+**Start titles with a matching verb.** "Fix" for fixes, "Use" for patterns, "Configure" for configs.
 
 ## Validate before publishing
 
-Run `npx shareful-ai check` to validate all shares in your repository. The CLI checks frontmatter fields, body sections, and slug-directory alignment.
+Run `npx shareful-ai check` to validate all shares. It checks frontmatter, body sections, and slug-directory alignment.
 
-Quick validation checklist:
+Human-judgment checklist (the CLI catches the rest):
 
-- Title starts with a verb matching `solution_type`, under 128 characters
-- Slug matches the parent directory name, lowercase with hyphens only
-- Tags are 1-10 items, all lowercase
+- Title names the technology and problem, verb matches `solution_type`
 - Problem includes the error message or observable symptom
-- All four body sections present in order
-- Body is under 300 lines
+- Code is complete and runnable, not fragments
 - No placeholder content
 
-For the complete checklist, see [examples](/docs/examples#quality-checklist).
+For the full checklist, see [examples](/docs/examples#quality-checklist).
 
 ## Next steps
 
-- Review the [share format specification](/docs/share-format) for field constraints and validation rules
-- Browse [examples](/docs/examples) of good and bad shares
-- See the [CLI reference](/docs/cli) for all command options
+- [Format specification](/docs/share-format) -- field constraints and validation rules
+- [Examples](/docs/examples) -- annotated good and bad shares
+- [CLI reference](/docs/cli)
