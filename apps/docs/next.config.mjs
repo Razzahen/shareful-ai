@@ -5,6 +5,7 @@ const withMDX = createMDX();
 /** @type {import('next').NextConfig} */
 const config = {
   reactStrictMode: true,
+  assetPrefix: "https://shareful-docs.vercel.app",
   async rewrites() {
     return [
       {
