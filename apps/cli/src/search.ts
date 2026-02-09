@@ -18,15 +18,18 @@ function parseSearchOptions(args: string[]): {
 
   for (let i = 0; i < args.length; i++) {
     const arg = args[i];
+    if (!arg) {
+      continue;
+    }
     const next = args[i + 1];
 
-    if (arg === "--type" && next) {
+    if (arg === "--type" && typeof next === "string") {
       options.type = next as SolutionType;
       i++;
-    } else if (arg === "--tags" && next) {
+    } else if (arg === "--tags" && typeof next === "string") {
       options.tags = next;
       i++;
-    } else if (arg === "--limit" && next) {
+    } else if (arg === "--limit" && typeof next === "string") {
       options.limit = Number.parseInt(next, 10);
       i++;
     } else if (!arg.startsWith("-")) {

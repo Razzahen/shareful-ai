@@ -18,7 +18,7 @@ const MAX_TAGS = 10;
 const MAX_BODY_LINES = 300;
 const SLUG_REGEX = /^[a-z0-9-]+$/;
 
-export interface ValidationError {
+interface ValidationError {
   field: string;
   message: string;
 }
@@ -60,9 +60,7 @@ function validateTags(tags: unknown): ValidationError[] {
   return errors;
 }
 
-export function validateFrontmatter(
-  data: Record<string, unknown>
-): ValidationError[] {
+function validateFrontmatter(data: Record<string, unknown>): ValidationError[] {
   const errors: ValidationError[] = [];
 
   if (!data.title || typeof data.title !== "string") {
@@ -136,7 +134,7 @@ const REQUIRED_SECTIONS = [
   "## Context",
 ];
 
-export function validateBody(content: string): ValidationError[] {
+function validateBody(content: string): ValidationError[] {
   const errors: ValidationError[] = [];
   const lines = content.split("\n");
 
@@ -159,7 +157,7 @@ export function validateBody(content: string): ValidationError[] {
   return errors;
 }
 
-export interface ParseResult {
+interface ParseResult {
   share: ParsedShare | null;
   errors: ValidationError[];
 }

@@ -4,6 +4,7 @@ import { cancel, intro, isCancel, outro, select, text } from "@clack/prompts";
 import { DIM, RESET, TEXT } from "./colors.ts";
 import { getSharesRepoPath } from "./config.ts";
 import { SHARE_FILE, SHARES_DIR } from "./constants.ts";
+import { getGitRemoteRepo, registerWithApi } from "./register.ts";
 import { generateSlug } from "./share-parser.ts";
 import { track } from "./telemetry.ts";
 import type { SolutionType } from "./types.ts";
@@ -32,7 +33,7 @@ interface ShareOptions {
   problem?: string;
 }
 
-export function parseCreateOptions(args: string[]): ShareOptions {
+function parseCreateOptions(args: string[]): ShareOptions {
   const options: ShareOptions = {};
 
   for (let i = 0; i < args.length; i++) {
@@ -280,7 +281,19 @@ export async function runCreate(args: string[]): Promise<void> {
   );
   writeFileSync(sharePath, content);
 
-  track({ event: "share", slug, shareCount: "1" });
+  const remote = getGitRemoteRepo();
+  if (remote) {
+    registerWithApi(remote.owner, remote.repo);
+    track({
+      event: "share",
+      slug,
+      shareCount: "1",
+      owner: remote.owner,
+      repo: remote.repo,
+    });
+  } else {
+    track({ event: "share", slug, shareCount: "1" });
+  }
 
   if (isNonInteractive) {
     console.log(
