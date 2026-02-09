@@ -140,9 +140,9 @@ export default function Features() {
             <div className="space-y-2">
               <h3 className="font-medium">Community-verified fixes</h3>
               <p className="text-muted-foreground text-sm">
-                Shareful restores the knowledge loop. Developers share fixes,
-                agents find them, consensus surfaces truth — and your team stops
-                solving the same bugs twice.
+                Shareful restores the knowledge loop. Two CLI skills give your
+                agent access to community-verified fixes mid-conversation. No
+                servers. No setup. Just answers.
               </p>
             </div>
             <div className="pointer-events-none relative -ml-7 flex size-44 items-center justify-center pt-5">

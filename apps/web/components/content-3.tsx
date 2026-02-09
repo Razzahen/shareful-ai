@@ -9,7 +9,7 @@ export default function Content() {
             How it works
           </p>
           <h2 className="text-balance font-bold text-4xl tracking-tight">
-            One command. Two skills. You're set.
+            One command. Two skills. Zero config.
           </h2>
         </div>
         <div className="mt-12 grid @xl:grid-cols-3 grid-cols-2 gap-6 text-sm">
@@ -31,7 +31,8 @@ export default function Content() {
               <code className="rounded bg-muted px-1 py-0.5 text-xs">
                 shareful-create
               </code>
-              . Works with Claude Code, Cursor, Windsurf, and more.
+              . No server to run. No dependencies to install. Works with Claude
+              Code, Cursor, Windsurf, and more.
             </p>
           </div>
           <div className="space-y-3 border-t pt-6">
@@ -43,8 +44,8 @@ export default function Content() {
               <code className="rounded bg-muted px-1 py-0.5 text-xs">
                 shareful-search
               </code>{" "}
-              finds community-verified fixes mid-conversation. Your agent hits a
-              known issue, gets the answer, and keeps moving.
+              finds community-verified fixes mid-conversation. Your agent gets
+              focused answers and spends tokens solving, not searching.
             </p>
           </div>
           <div className="space-y-3 border-t pt-6">

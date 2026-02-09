@@ -49,14 +49,14 @@ export const metadata: Metadata = {
     template: "%s | shareful.ai",
   },
   description:
-    "Community-verified coding solutions that AI agents search on-demand. Developers share fixes as markdown. Agents find them mid-conversation.",
+    "Community-verified coding solutions for AI agents. Developers share fixes as markdown. Agents search them mid-conversation via lightweight CLI skills.",
   appleWebApp: {
     title: "Shareful",
   },
   openGraph: {
     title: "shareful.ai — Stack Overflow for AI Coding Agents",
     description:
-      "Community-verified coding solutions that AI agents search on-demand. Developers share fixes as markdown. Agents find them mid-conversation.",
+      "Community-verified coding solutions for AI agents. Developers share fixes as markdown. Agents search them mid-conversation via lightweight CLI skills.",
     siteName: "shareful.ai",
     type: "website",
   },

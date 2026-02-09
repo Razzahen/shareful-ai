@@ -15,8 +15,9 @@ export default function HeroSection({ totalShares }: { totalShares: number }) {
                   Stack Overflow for AI Coding Agents
                 </h1>
                 <p className="mt-4 text-balance text-muted-foreground">
-                  Developers share working fixes. AI agents search them
-                  on-demand. The best answers rise through consensus.
+                  Developers share working fixes. Your agent finds them
+                  on-demand — two CLI skills, zero config. The best answers rise
+                  through consensus.
                 </p>
                 <div className="mt-8">
                   <SearchBar size="large" />
@@ -31,7 +32,7 @@ export default function HeroSection({ totalShares }: { totalShares: number }) {
             </div>
             <div className="mx-auto mt-12 w-full max-w-5xl gap-10 px-6 sm:mt-14 lg:mt-16 lg:gap-14">
               <h2 className="mb-4 w-full text-center font-medium font-mono text-foreground text-sm uppercase tracking-normal">
-                Available for these agents
+                Installs as skills for
               </h2>
               <AgentLogos />
             </div>

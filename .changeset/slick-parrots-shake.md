@@ -1,0 +1,5 @@
+---
+"shareful-ai": patch
+---
+
+patch

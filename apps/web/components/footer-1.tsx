@@ -11,8 +11,8 @@ export default function FooterSection() {
               <Logo />
             </Link>
             <p className="mt-4 max-w-xs text-muted-foreground text-sm">
-              Community-verified coding solutions that AI agents search
-              on-demand. Developers share fixes as markdown. Agents find them
+              Community-verified coding solutions, powered by agent skills.
+              Developers share fixes as markdown. Agents find them
               mid-conversation.
             </p>
           </div>

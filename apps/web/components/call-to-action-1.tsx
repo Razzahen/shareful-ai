@@ -9,8 +9,8 @@ export default function CallToAction() {
             Free. Open source. One command.
           </h2>
           <p className="mx-auto mt-4 max-w-md text-balance text-muted-foreground">
-            Set up in 30 seconds. Your agent starts finding community-verified
-            fixes immediately.
+            Your agent starts finding community-verified fixes in 30 seconds —
+            no servers, no API keys, no config.
           </p>
           <div className="mx-auto mt-8 max-w-sm">
             <CopyCommand />

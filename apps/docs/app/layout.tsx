@@ -11,11 +11,11 @@ export const metadata: Metadata = {
     template: "%s | shareful.ai",
   },
   description:
-    "Share AI coding solutions as markdown files in GitHub repos. Discover, create, and publish reusable solutions with the community.",
+    "Share AI coding solutions as markdown in GitHub repos. Two CLI skills let your agents discover verified fixes on-demand.",
   openGraph: {
     title: "shareful.ai | Documentation",
     description:
-      "Share AI coding solutions as markdown files in GitHub repos. Discover, create, and publish reusable solutions with the community.",
+      "Share AI coding solutions as markdown in GitHub repos. Two CLI skills let your agents discover verified fixes on-demand.",
     siteName: "shareful.ai",
     type: "website",
   },
