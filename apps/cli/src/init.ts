@@ -10,7 +10,7 @@ import {
   note,
   outro,
 } from "@clack/prompts";
-import { DIM, RESET, TEXT } from "./colors.ts";
+import { dim, text } from "./colors.ts";
 import { SHARES_DIR } from "./constants.ts";
 import { track } from "./telemetry.ts";
 
@@ -227,15 +227,15 @@ function initGitRepo(targetDir: string): void {
     log.step("Initialized git repository");
   } else {
     log.info(
-      `${DIM}Could not initialize git repository. You can run ${TEXT}git init${RESET}${DIM} manually.${RESET}`
+      `${dim("Could not initialize git repository. You can run")} ${text("git init")} ${dim("manually.")}`
     );
   }
 }
 
-export async function runInitRepo(args: string[]): Promise<void> {
+export async function runInitRepo(name?: string): Promise<void> {
   intro("Create a new shares repository");
 
-  const nameArg = args[0] && !args[0].startsWith("-") ? args[0] : "shares";
+  const nameArg = name ?? "shares";
 
   const error = validateProjectName(nameArg);
   if (error) {

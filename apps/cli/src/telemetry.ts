@@ -21,15 +21,16 @@ interface CheckTelemetryData {
   errorCount: string;
 }
 
-interface AddSkillsTelemetryData {
-  event: "add-skills";
+interface SkillsTelemetryData {
+  event: "skills";
+  args?: string;
 }
 
 type TelemetryData =
   | ShareTelemetryData
   | InitTelemetryData
   | CheckTelemetryData
-  | AddSkillsTelemetryData;
+  | SkillsTelemetryData;
 
 let cliVersion: string | null = null;
 

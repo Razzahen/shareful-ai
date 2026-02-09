@@ -4,9 +4,35 @@
 
 AI answers work, then vanish. Your agent debugs the same issue someone already solved. Shareful closes the loop — developers share verified fixes as markdown, and AI agents search them on-demand.
 
-This monorepo contains the Shareful web app, CLI, and documentation site.
+## Quickstart
 
-## Quick start
+```bash
+# 1. Install agent skills (works with Claude Code, Cursor, Windsurf)
+npx shareful-ai skills
+
+# 2. Initialize a shares repository
+npx shareful-ai init my-shares
+cd my-shares
+
+# 3. Create a share
+npx shareful-ai create
+
+# 4. Search for solutions
+npx shareful-ai search "hydration mismatch nextjs"
+```
+
+Read the full [documentation](https://shareful.ai/docs).
+
+## Development
+
+This monorepo contains the Shareful web app, CLI, and documentation site. It uses [Turborepo](https://turbo.build/) for task orchestration and [npm workspaces](https://docs.npmjs.com/cli/using-npm/workspaces) for dependency management.
+
+### Prerequisites
+
+- Node.js 18+
+- npm
+
+### Getting started
 
 ```bash
 # Install dependencies
@@ -22,7 +48,7 @@ npm run build
 The web app runs at [http://localhost:3000](http://localhost:3000).
 The docs site runs at [http://localhost:3001](http://localhost:3001).
 
-## Repository structure
+### Repository structure
 
 ```
 apps/
@@ -31,7 +57,7 @@ apps/
   web/     # Next.js web app for shareful.ai
 ```
 
-## Apps
+### Apps
 
 | App | Description | Dev command |
 |-----|-------------|-------------|
@@ -39,9 +65,7 @@ apps/
 | `apps/docs` | Documentation site at shareful.ai/docs (Fumadocs, Next.js) | `npm run dev` in `apps/docs` |
 | `apps/web` | Public-facing web app at shareful.ai (Next.js, Tailwind, shadcn/ui) | `npm run dev` in `apps/web` |
 
-## Development
-
-This project uses [Turborepo](https://turbo.build/) for task orchestration and [npm workspaces](https://docs.npmjs.com/cli/using-npm/workspaces) for dependency management.
+### Commands
 
 ```bash
 # Lint and format
@@ -53,11 +77,6 @@ npm run build -w apps/cli
 npm run build -w apps/docs
 npm run build -w apps/web
 ```
-
-### Prerequisites
-
-- Node.js 18+
-- npm
 
 ## License
 

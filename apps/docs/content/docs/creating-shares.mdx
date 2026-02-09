@@ -3,26 +3,9 @@ title: Creating shares
 description: How to create high-quality shares using the CLI, including interactive mode, CLI flags, and writing tips.
 ---
 
-You'll learn how to create shares from start to finish, including the interactive workflow, CLI flags for automation, and tips for writing useful content.
+This guide covers CLI flags, writing tips, and quality standards for shares. For the full quickstart, see [Getting started](/docs).
 
-## Quick start
-
-Run the create command from inside a shares repository:
-
-```bash
-npx shareful-ai create
-```
-
-The CLI prompts you for each required field:
-
-1. **Title** -- A clear, specific title for your solution
-2. **Problem** -- A one-sentence description of the issue
-3. **Solution type** -- Choose from `fix`, `workaround`, `pattern`, `reference`, or `config`
-4. **Tags** -- Relevant keywords for discoverability
-
-After completing the prompts, the CLI generates a `SHARE.md` file in `shares/<slug>/SHARE.md` with your frontmatter pre-filled and section templates ready to complete.
-
-## Using CLI flags
+## CLI flags
 
 Skip the interactive prompts by passing all four flags directly:
 

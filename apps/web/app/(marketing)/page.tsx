@@ -12,8 +12,8 @@ export default async function HomePage() {
   return (
     <div className="flex flex-1 flex-col">
       <HeroSection totalShares={allTime.total} />
-      <Features />
       <Content />
+      <Features />
       <CallToAction />
     </div>
   );

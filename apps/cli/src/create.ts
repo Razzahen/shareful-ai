@@ -1,7 +1,7 @@
 import { existsSync, mkdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { cancel, intro, isCancel, outro, select, text } from "@clack/prompts";
-import { DIM, RESET, TEXT } from "./colors.ts";
+import { dim, text as textColor } from "./colors.ts";
 import { getSharesRepoPath } from "./config.ts";
 import { SHARE_FILE, SHARES_DIR } from "./constants.ts";
 import { getGitRemoteRepo, registerWithApi } from "./register.ts";
@@ -31,31 +31,6 @@ interface ShareOptions {
   tags?: string;
   type?: SolutionType;
   problem?: string;
-}
-
-function parseCreateOptions(args: string[]): ShareOptions {
-  const options: ShareOptions = {};
-
-  for (let i = 0; i < args.length; i++) {
-    const arg = args[i];
-    const next = args[i + 1];
-
-    if ((arg === "--title" || arg === "-t") && next) {
-      options.title = next;
-      i++;
-    } else if (arg === "--tags" && next) {
-      options.tags = next;
-      i++;
-    } else if (arg === "--type" && next) {
-      options.type = next as SolutionType;
-      i++;
-    } else if ((arg === "--problem" || arg === "-p") && next) {
-      options.problem = next;
-      i++;
-    }
-  }
-
-  return options;
 }
 
 function getToday(): string {
@@ -111,30 +86,28 @@ interface ShareResult {
 function validateNonInteractive(options: ShareOptions): ShareResult | null {
   const title = options.title ?? "";
   if (title.length > 128) {
-    console.log(`${DIM}Title must be at most 128 characters.${RESET}`);
+    console.log(dim("Title must be at most 128 characters."));
     return null;
   }
 
   const problem = options.problem ?? "";
   if (!problem) {
     console.log(
-      `${DIM}Problem is required. Use ${RESET}${TEXT}--problem "..."${RESET}${DIM} to provide it.${RESET}`
+      `${dim("Problem is required. Use")} ${textColor('--problem "..."')} ${dim("to provide it.")}`
     );
     return null;
   }
   if (problem.length > 256) {
-    console.log(`${DIM}Problem must be at most 256 characters.${RESET}`);
+    console.log(dim("Problem must be at most 256 characters."));
     return null;
   }
 
   const type = options.type;
   if (!(type && VALID_SOLUTION_TYPES.includes(type))) {
     console.log(
-      `${DIM}Invalid solution type: ${RESET}${TEXT}${options.type}${RESET}`
+      `${dim("Invalid solution type:")} ${textColor(options.type ?? "")}`
     );
-    console.log(
-      `${DIM}Must be one of: ${VALID_SOLUTION_TYPES.join(", ")}${RESET}`
-    );
+    console.log(dim(`Must be one of: ${VALID_SOLUTION_TYPES.join(", ")}`));
     return null;
   }
 
@@ -144,11 +117,11 @@ function validateNonInteractive(options: ShareOptions): ShareResult | null {
       .map((t) => t.trim().toLowerCase())
       .filter(Boolean) ?? [];
   if (tags.length < 1 || tags.length > 10) {
-    console.log(`${DIM}Tags must have 1-10 items.${RESET}`);
+    console.log(dim("Tags must have 1-10 items."));
     return null;
   }
   if (tags.some((t) => t.length > 32)) {
-    console.log(`${DIM}Each tag must be at most 32 characters.${RESET}`);
+    console.log(dim("Each tag must be at most 32 characters."));
     return null;
   }
 
@@ -237,14 +210,13 @@ async function promptForShare(
   };
 }
 
-export async function runCreate(args: string[]): Promise<void> {
-  const options = parseCreateOptions(args);
+export async function runCreate(options: ShareOptions): Promise<void> {
   const cwd = getSharesRepoPath();
   const sharesDir = join(cwd, SHARES_DIR);
 
   if (!existsSync(sharesDir)) {
     console.log(
-      `${DIM}No shares/ directory found. Run${RESET} ${TEXT}npx shareful-ai init${RESET} ${DIM}first.${RESET}`
+      `${dim("No shares/ directory found. Run")} ${textColor("npx shareful-ai init")} ${dim("first.")}`
     );
     return;
   }
@@ -265,7 +237,7 @@ export async function runCreate(args: string[]): Promise<void> {
 
   if (existsSync(sharePath)) {
     console.log(
-      `${TEXT}Share already exists at ${DIM}${SHARES_DIR}/${slug}/${SHARE_FILE}${RESET}`
+      `${textColor("Share already exists at")} ${dim(`${SHARES_DIR}/${slug}/${SHARE_FILE}`)}`
     );
     return;
   }
@@ -297,17 +269,17 @@ export async function runCreate(args: string[]): Promise<void> {
 
   if (isNonInteractive) {
     console.log(
-      `${TEXT}Created share: ${DIM}${SHARES_DIR}/${slug}/${SHARE_FILE}${RESET}`
+      `${textColor("Created share:")} ${dim(`${SHARES_DIR}/${slug}/${SHARE_FILE}`)}`
     );
   } else {
     outro(`Created ${SHARES_DIR}/${slug}/${SHARE_FILE}`);
   }
 
   console.log();
-  console.log(`${DIM}Next steps:${RESET}`);
+  console.log(dim("Next steps:"));
   console.log(
-    `  1. Edit ${TEXT}${SHARES_DIR}/${slug}/${SHARE_FILE}${RESET} with your solution`
+    `  1. Edit ${textColor(`${SHARES_DIR}/${slug}/${SHARE_FILE}`)} with your solution`
   );
-  console.log(`  2. ${TEXT}git push${RESET} to publish`);
+  console.log(`  2. ${textColor("git push")} to publish`);
   console.log();
 }

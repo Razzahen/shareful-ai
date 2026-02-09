@@ -1,20 +1,20 @@
-import { intro, log, outro, spinner } from "@clack/prompts";
-import { DIM, RESET, TEXT } from "./colors.ts";
+import { intro, log, outro } from "@clack/prompts";
+import ora from "ora";
+import { dim, text } from "./colors.ts";
 import { SHAREFUL_API_URL } from "./constants.ts";
 import { getGitRemoteRepo } from "./register.ts";
 
-export async function runRegister(args: string[]): Promise<void> {
+export async function runRegister(ownerRepo?: string): Promise<void> {
   intro("Register repository");
 
   let owner: string;
   let repo: string;
 
-  const explicit = args[0];
-  if (explicit) {
-    const parts = explicit.split("/");
+  if (ownerRepo) {
+    const parts = ownerRepo.split("/");
     if (parts.length !== 2 || !parts[0] || !parts[1]) {
       log.error(
-        `${DIM}Invalid format. Use ${RESET}${TEXT}owner/repo${RESET}${DIM}.${RESET}`
+        `${dim("Invalid format. Use")} ${text("owner/repo")}${dim(".")}`
       );
       return;
     }
@@ -24,7 +24,7 @@ export async function runRegister(args: string[]): Promise<void> {
     const remote = getGitRemoteRepo();
     if (!remote) {
       log.error(
-        `${DIM}Could not detect git remote. Provide ${RESET}${TEXT}owner/repo${RESET}${DIM} explicitly.${RESET}`
+        `${dim("Could not detect git remote. Provide")} ${text("owner/repo")} ${dim("explicitly.")}`
       );
       return;
     }
@@ -32,8 +32,7 @@ export async function runRegister(args: string[]): Promise<void> {
     repo = remote.repo;
   }
 
-  const s = spinner();
-  s.start(`Registering ${owner}/${repo}`);
+  const s = ora(`Registering ${owner}/${repo}`).start();
 
   try {
     const res = await fetch(`${SHAREFUL_API_URL}/api/index`, {
@@ -43,20 +42,18 @@ export async function runRegister(args: string[]): Promise<void> {
     });
 
     if (res.ok) {
-      s.stop(`Registered ${owner}/${repo}`);
+      s.succeed(`Registered ${owner}/${repo}`);
       outro(
-        `${TEXT}${owner}/${repo}${RESET}${DIM} queued for indexing on shareful.ai${RESET}`
+        `${text(`${owner}/${repo}`)} ${dim("queued for indexing on shareful.ai")}`
       );
     } else {
-      s.stop("Registration failed");
+      s.fail("Registration failed");
       log.error(
-        `${DIM}Server returned ${RESET}${TEXT}${res.status}${RESET}${DIM}. Try again later.${RESET}`
+        `${dim("Server returned")} ${text(`${res.status}`)}${dim(". Try again later.")}`
       );
     }
   } catch {
-    s.stop("Registration failed");
-    log.error(
-      `${DIM}Could not reach shareful.ai. Check your connection.${RESET}`
-    );
+    s.fail("Registration failed");
+    log.error(dim("Could not reach shareful.ai. Check your connection."));
   }
 }

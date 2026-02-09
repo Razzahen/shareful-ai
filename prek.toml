@@ -1,0 +1,11 @@
+[[repos]]
+repo = "local"
+
+[[repos.hooks]]
+id = "ultracite-fix"
+name = "Ultracite Fix"
+entry = "npx ultracite fix"
+language = "system"
+pass_filenames = false
+always_run = true
+stages = ["pre-commit"]

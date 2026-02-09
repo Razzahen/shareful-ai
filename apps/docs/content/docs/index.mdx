@@ -1,40 +1,36 @@
 ---
-title: Documentation
-description: Share AI coding solutions as markdown in GitHub repos. Two CLI skills let your agents discover verified fixes on-demand.
+title: Getting started
+description: Install Shareful skills and start sharing AI coding solutions in under a minute.
 ---
 
-Shareful is an open-source CLI that ships two agent skills for sharing AI coding solutions. Capture fixes, patterns, and workarounds as structured markdown in GitHub repos — your agents discover them on-demand. This page shows you how to get set up, create your first share, and search for existing solutions.
+Shareful is an open-source CLI that lets developers share verified coding solutions as markdown. Your AI agent discovers them on-demand. This page gets you up and running.
 
-## Getting started
+## Quickstart
 
-### Why skills, not MCP?
+### 1. Install skills
 
-Agent skills are plain CLI tools your agent calls directly. No server to run, no protocol negotiation, no extra dependencies. Shareful ships two:
+```bash
+npx shareful-ai skills
+```
 
-- **shareful-search** — finds community solutions mid-conversation
-- **shareful-create** — guides agents through capturing a fix
+This adds two agent skills — `shareful-search` and `shareful-create`. Works with Claude Code, Cursor, Windsurf, and more. No server to run, no dependencies to install.
 
-Run `npx shareful-ai skills` and both install in seconds.
-
-### 1. Initialize a shares repository
-
-Create a new GitHub repository to store your shares:
+### 2. Initialize a shares repository
 
 ```bash
 npx shareful-ai init my-shares
+cd my-shares
 ```
 
-This creates a directory with the required structure, including a `shares/` folder and an example share.
+This creates a directory with the required structure, including a `shares/` folder and an example share. Push it to GitHub as a public repository.
 
-### 2. Create a share
-
-Capture a solution interactively:
+### 3. Create and share a solution
 
 ```bash
 npx shareful-ai create
 ```
 
-Or pass flags directly:
+The CLI walks you through capturing a fix interactively. Or pass flags directly:
 
 ```bash
 npx shareful-ai create \
@@ -44,53 +40,40 @@ npx shareful-ai create \
   --type fix
 ```
 
-### 3. Push to GitHub
-
-Validate your shares, then push to GitHub:
+Validate and push:
 
 ```bash
 npx shareful-ai check
 git add -A && git commit -m "Add share" && git push
 ```
 
-Your shares are now discoverable on [shareful.ai](https://shareful.ai).
+Your shares are now indexed and discoverable on [shareful.ai](https://shareful.ai).
 
-## Search for solutions
-
-Find community solutions from the command line:
+### 4. Find solutions
 
 ```bash
 npx shareful-ai search "hydration mismatch nextjs"
 ```
 
-Filter by type or tags:
+The `shareful-search` skill finds community-verified fixes mid-conversation. Your agent gets focused answers and spends tokens solving, not searching.
 
-```bash
-npx shareful-ai search "auth" --type pattern --tags react
-```
+## Why skills, not MCP?
+
+Agent skills are plain CLI tools your agent calls directly — no server to run, no protocol negotiation, no extra dependencies. One command installs both skills. MCP requires a running server, connection management, and protocol-specific integration. Skills are simpler to set up, lighter on tokens, and work with any agent.
 
 ## Learn more
-
-Explore these guides to learn the format, write effective shares, and see annotated examples.
 
 <Cards>
   <Card title="What is a share?" href="/docs/what-is-a-share">
     Understand how shares work and why the format matters.
   </Card>
-  <Card title="Share format specification" href="/docs/share-format">
-    Field constraints, validation rules, and section-writing guidance.
-  </Card>
   <Card title="Creating shares" href="/docs/creating-shares">
     Step-by-step guide to writing high-quality shares.
   </Card>
-  <Card title="Examples" href="/docs/examples">
-    Annotated good and bad examples to calibrate quality.
+  <Card title="Finding shares" href="/docs/finding-shares">
+    Search tips, filters, and the search API reference.
+  </Card>
+  <Card title="Share format specification" href="/docs/share-format">
+    Field constraints, validation rules, and section-writing guidance.
   </Card>
 </Cards>
-
-## Next steps
-
-- Read the [CLI reference](/docs/cli) for all commands and options
-- Learn the [share format specification](/docs/share-format)
-- Follow the [creating shares](/docs/creating-shares) guide
-- Browse the [FAQ](/docs/faq) for common questions

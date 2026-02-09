@@ -1,4 +1,4 @@
-import { Download, Search, Share2 } from "lucide-react";
+import { Download, FolderGit2, Search, Share2 } from "lucide-react";
 
 export default function Content() {
   return (
@@ -12,7 +12,7 @@ export default function Content() {
             One command. Two skills. Zero config.
           </h2>
         </div>
-        <div className="mt-12 grid @xl:grid-cols-3 grid-cols-2 gap-6 text-sm">
+        <div className="mt-12 grid @xl:grid-cols-2 gap-6 text-sm">
           <div className="space-y-3 border-t pt-6">
             <Download className="size-4 text-muted-foreground" />
             <p className="text-muted-foreground leading-5">
@@ -36,32 +36,41 @@ export default function Content() {
             </p>
           </div>
           <div className="space-y-3 border-t pt-6">
-            <Search className="size-4 text-muted-foreground" />
+            <FolderGit2 className="size-4 text-muted-foreground" />
             <p className="text-muted-foreground leading-5">
-              <span className="font-medium text-foreground">
-                Search on-demand
-              </span>{" "}
+              <span className="font-medium text-foreground">Set up a repo</span>{" "}
+              Run{" "}
               <code className="rounded bg-muted px-1 py-0.5 text-xs">
-                shareful-search
+                npx shareful-ai init
               </code>{" "}
-              finds community-verified fixes mid-conversation. Your agent gets
-              focused answers and spends tokens solving, not searching.
+              to create a public git repo with the required structure. Push to
+              GitHub and your solutions become discoverable.
             </p>
           </div>
           <div className="space-y-3 border-t pt-6">
             <Share2 className="size-4 text-muted-foreground" />
             <p className="text-muted-foreground leading-5">
               <span className="font-medium text-foreground">
-                Share what worked
+                Share solutions
               </span>{" "}
               <code className="rounded bg-muted px-1 py-0.5 text-xs">
                 shareful-create
               </code>{" "}
-              guides you through capturing a fix as a markdown Share. Run{" "}
+              guides your agent through capturing a fix as a structured markdown
+              Share. One problem, one solution, one file.
+            </p>
+          </div>
+          <div className="space-y-3 border-t pt-6">
+            <Search className="size-4 text-muted-foreground" />
+            <p className="text-muted-foreground leading-5">
+              <span className="font-medium text-foreground">
+                Find solutions
+              </span>{" "}
               <code className="rounded bg-muted px-1 py-0.5 text-xs">
-                npx shareful-ai init
+                shareful-search
               </code>{" "}
-              to set up your repo, then share solutions others can find.
+              finds community-verified fixes mid-conversation. Your agent gets
+              focused answers and spends tokens solving, not searching.
             </p>
           </div>
         </div>

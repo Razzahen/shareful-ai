@@ -3,10 +3,10 @@
   "pages": [
     "index",
     "what-is-a-share",
-    "share-format",
     "creating-shares",
-    "examples",
     "finding-shares",
+    "share-format",
+    "examples",
     "cli",
     "configuration",
     "faq"
