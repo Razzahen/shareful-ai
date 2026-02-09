@@ -19,7 +19,7 @@
     "check-types": "turbo check-types",
     "check": "ultracite check",
     "fix": "ultracite fix",
-    "prepare": "husky"
+    "prepare": "husky || true"
   },
   "dependencies": {
     "nuqs": "^2.8.8"
