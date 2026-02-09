@@ -26,11 +26,18 @@ interface SkillsTelemetryData {
   args?: string;
 }
 
+interface ConfirmTelemetryData {
+  event: "confirm";
+  sharePath: string;
+  outcome: string;
+}
+
 type TelemetryData =
   | ShareTelemetryData
   | InitTelemetryData
   | CheckTelemetryData
-  | SkillsTelemetryData;
+  | SkillsTelemetryData
+  | ConfirmTelemetryData;
 
 let cliVersion: string | null = null;
 

@@ -38,6 +38,8 @@ export const VALID_SOLUTION_TYPES: SolutionType[] = [
 ];
 
 export interface SearchShareResult {
+  owner: string;
+  repo: string;
   title: string;
   slug: string;
   tags: string[];

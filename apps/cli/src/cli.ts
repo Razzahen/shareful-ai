@@ -6,6 +6,7 @@ import { fileURLToPath } from "node:url";
 import { Command } from "commander";
 import { runSkills } from "./add-skills.ts";
 import { runCheck } from "./check.ts";
+import { runConfirm } from "./confirm.ts";
 import { runCreate } from "./create.ts";
 import { runInitRepo } from "./init.ts";
 import { runRegister } from "./register-command.ts";
@@ -65,6 +66,14 @@ program
   .option("--limit <n>", "Max results (default: 5)")
   .action(async (queryParts: string[], options) => {
     await runSearch(queryParts.join(" "), options);
+  });
+
+program
+  .command("confirm <share_path>")
+  .description("Report whether a share worked (success/failure)")
+  .option("--failed", "Report that the share did not work")
+  .action(async (sharePath: string, options: { failed?: boolean }) => {
+    await runConfirm(sharePath, options);
   });
 
 program

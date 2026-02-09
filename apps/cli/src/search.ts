@@ -49,6 +49,11 @@ export async function runSearch(
       if (share.url) {
         console.log(`    ${dim(share.url)}`);
       }
+      if (share.owner && share.repo && share.slug) {
+        console.log(
+          `    ${dim("→ shareful-ai confirm")} ${text(`${share.owner}/${share.repo}/${share.slug}`)}`
+        );
+      }
       console.log();
     }
 
