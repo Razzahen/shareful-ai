@@ -29,20 +29,6 @@ export interface ParsedShare {
   filePath: string;
 }
 
-export interface ShareManifestEntry {
-  slug: string;
-  title: string;
-  tags: string[];
-  problem: string;
-  solution_type: SolutionType;
-}
-
-export interface ShareManifest {
-  version: number;
-  owner: string;
-  shares: ShareManifestEntry[];
-}
-
 export const VALID_SOLUTION_TYPES: SolutionType[] = [
   "fix",
   "workaround",
