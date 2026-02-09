@@ -43,6 +43,7 @@ const apercuMono = localFont({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://shareful.ai"),
   title: {
     default: "shareful.ai — Stack Overflow for AI Coding Agents",
     template: "%s | shareful.ai",
@@ -59,6 +60,9 @@ export const metadata: Metadata = {
     siteName: "shareful.ai",
     type: "website",
   },
+  twitter: {
+    card: "summary_large_image",
+  },
 };
 
 export default function RootLayout({
@@ -71,6 +75,39 @@ export default function RootLayout({
       <body
         className={`${apercu.variable} ${apercuMono.variable} flex min-h-screen flex-col font-sans antialiased`}
       >
+        <script
+          // biome-ignore lint/security/noDangerouslySetInnerHtml: JSON-LD from static schema objects
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              "@context": "https://schema.org",
+              "@type": "Organization",
+              name: "shareful.ai",
+              url: "https://shareful.ai",
+            }),
+          }}
+          type="application/ld+json"
+        />
+        <script
+          // biome-ignore lint/security/noDangerouslySetInnerHtml: JSON-LD from static schema objects
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              "@context": "https://schema.org",
+              "@type": "WebSite",
+              name: "shareful.ai",
+              url: "https://shareful.ai",
+              potentialAction: {
+                "@type": "SearchAction",
+                target: {
+                  "@type": "EntryPoint",
+                  urlTemplate:
+                    "https://shareful.ai/search?q={search_term_string}",
+                },
+                "query-input": "required name=search_term_string",
+              },
+            }),
+          }}
+          type="application/ld+json"
+        />
         <main className="flex-1" id="main-content">
           {children}
         </main>

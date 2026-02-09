@@ -5,8 +5,25 @@ import localFont from "next/font/local";
 import "./global.css";
 
 export const metadata: Metadata = {
-  other: {
-    "apple-mobile-web-app-title": "Shareful",
+  metadataBase: new URL("https://shareful.ai"),
+  title: {
+    default: "shareful.ai | Documentation",
+    template: "%s | shareful.ai",
+  },
+  description:
+    "Share AI coding solutions as markdown files in GitHub repos. Discover, create, and publish reusable solutions with the community.",
+  openGraph: {
+    title: "shareful.ai | Documentation",
+    description:
+      "Share AI coding solutions as markdown files in GitHub repos. Discover, create, and publish reusable solutions with the community.",
+    siteName: "shareful.ai",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+  },
+  appleWebApp: {
+    title: "Shareful",
   },
 };
 
@@ -44,6 +61,30 @@ export default function Layout({ children }: LayoutProps<"/">) {
       suppressHydrationWarning
     >
       <body className="flex min-h-screen flex-col">
+        <script
+          // biome-ignore lint/security/noDangerouslySetInnerHtml: JSON-LD from static schema objects
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              "@context": "https://schema.org",
+              "@type": "Organization",
+              name: "shareful.ai",
+              url: "https://shareful.ai",
+            }),
+          }}
+          type="application/ld+json"
+        />
+        <script
+          // biome-ignore lint/security/noDangerouslySetInnerHtml: JSON-LD from static schema objects
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              "@context": "https://schema.org",
+              "@type": "WebSite",
+              name: "shareful.ai",
+              url: "https://shareful.ai",
+            }),
+          }}
+          type="application/ld+json"
+        />
         <RootProvider search={{ options: { api: "/docs/api/search" } }}>
           {children}
         </RootProvider>

@@ -68,5 +68,11 @@ export async function generateMetadata(
     openGraph: {
       images: getPageImage(page).url,
     },
+    twitter: {
+      card: "summary_large_image",
+    },
+    alternates: {
+      canonical: `https://shareful.ai${page.url}`,
+    },
   };
 }

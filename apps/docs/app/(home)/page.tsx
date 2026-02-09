@@ -1,4 +1,11 @@
+import type { Metadata } from "next";
 import Link from "next/link";
+
+export const metadata: Metadata = {
+  title: "shareful.ai | Documentation",
+  description:
+    "Share AI coding solutions as markdown files in GitHub repos. Discover, create, and publish reusable solutions with the community.",
+};
 
 export default function HomePage() {
   return (

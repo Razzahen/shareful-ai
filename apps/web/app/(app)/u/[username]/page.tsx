@@ -1,4 +1,5 @@
 import { Eye, FileText, TrendingUp } from "lucide-react";
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { ShareCard } from "@/components/share-card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -7,6 +8,35 @@ import { Separator } from "@/components/ui/separator";
 import { getContributorProfile } from "@/lib/reputation";
 
 export const dynamic = "force-dynamic";
+
+export async function generateMetadata(props: {
+  params: Promise<{ username: string }>;
+}): Promise<Metadata> {
+  const { username } = await props.params;
+  const profile = await getContributorProfile(username);
+
+  if (!profile) {
+    return {};
+  }
+
+  const title = `${username}'s Profile`;
+  const description = `${username}'s coding solutions on shareful.ai — ${profile.shares_count} shares`;
+
+  return {
+    title,
+    description,
+    openGraph: {
+      title,
+      description,
+    },
+    twitter: {
+      card: "summary_large_image",
+    },
+    alternates: {
+      canonical: `https://shareful.ai/u/${username}`,
+    },
+  };
+}
 
 export default async function ProfilePage(props: {
   params: Promise<{ username: string }>;
