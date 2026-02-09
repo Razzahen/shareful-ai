@@ -2,6 +2,8 @@ import type { MetadataRoute } from "next";
 import { db } from "@/lib/db";
 import { shares } from "@/lib/schema";
 
+export const dynamic = "force-dynamic";
+
 const BASE_URL = "https://shareful.ai";
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
