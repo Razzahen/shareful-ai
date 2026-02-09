@@ -50,6 +50,18 @@ export interface MatchDecision {
   matchId: number | null;
   confidence: number;
   rationale: string;
+  // Provider metadata for audit/debugging.
+  provider?: string;
+  // If present, indicates that a second judge confirmed the merge (provider name).
+  confirmedBy?: string;
+  // Optional extra confirmation details.
+  confirmations?: Array<{
+    provider: string;
+    decision: "same" | "new";
+    matchId: number | null;
+    confidence: number;
+    rationale: string;
+  }>;
 }
 
 export interface IngestResult {

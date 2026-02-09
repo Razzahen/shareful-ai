@@ -30,6 +30,15 @@ export interface DedupeStore {
     framework?: string;
   }): Promise<ProblemCandidate[]>;
 
+  findSimilarProblemsViaSolutions(args: {
+    problemEmbedding: number[];
+    solutionEmbedding: number[];
+    limitSolutions: number;
+    limitProblems: number;
+    language?: string;
+    framework?: string;
+  }): Promise<ProblemCandidate[]>;
+
   createProblem(args: {
     canonicalProblem: string;
     language: string | null;
@@ -45,6 +54,11 @@ export interface DedupeStore {
 
   findSimilarSolutions(args: {
     problemId: number;
+    embedding: number[];
+    limit: number;
+  }): Promise<SolutionCandidate[]>;
+
+  findSimilarSolutionsGlobal(args: {
     embedding: number[];
     limit: number;
   }): Promise<SolutionCandidate[]>;

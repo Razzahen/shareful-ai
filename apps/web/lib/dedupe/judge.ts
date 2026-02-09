@@ -2,12 +2,28 @@ import { geminiJudgeJson } from "./gemini";
 import { resolveJudgeProviderChain } from "./llm-config";
 import { openAiJudgeJson } from "./openai";
 import type { DedupeJudge } from "./providers";
+import { resolveDedupeTuning } from "./tuning";
 import type {
   MatchDecision,
   ProblemCandidate,
   ProblemSolutionSubmission,
   SolutionCandidate,
 } from "./types";
+
+function parseBooleanEnv(name: string, fallback: boolean): boolean {
+  const raw = process.env[name];
+  if (!raw) {
+    return fallback;
+  }
+  const normalized = raw.trim().toLowerCase();
+  if (normalized === "1" || normalized === "true" || normalized === "yes") {
+    return true;
+  }
+  if (normalized === "0" || normalized === "false" || normalized === "no") {
+    return false;
+  }
+  return fallback;
+}
 
 function coerceDecision(
   raw: Record<string, unknown>,
@@ -149,6 +165,7 @@ export function createOpenAiJudge(): DedupeJudge {
           matchId: null,
           confidence: 0,
           rationale: "No candidates",
+          provider: "openai",
         };
       }
 
@@ -158,7 +175,7 @@ export function createOpenAiJudge(): DedupeJudge {
       });
 
       const validIds = new Set(candidates.map((c) => c.id));
-      return coerceDecision(raw, validIds);
+      return { ...coerceDecision(raw, validIds), provider: "openai" };
     },
 
     async judgeSolutionMatch({ submission, candidates }) {
@@ -168,6 +185,7 @@ export function createOpenAiJudge(): DedupeJudge {
           matchId: null,
           confidence: 0,
           rationale: "No candidates",
+          provider: "openai",
         };
       }
 
@@ -177,7 +195,7 @@ export function createOpenAiJudge(): DedupeJudge {
       });
 
       const validIds = new Set(candidates.map((c) => c.id));
-      return coerceDecision(raw, validIds);
+      return { ...coerceDecision(raw, validIds), provider: "openai" };
     },
   };
 }
@@ -191,6 +209,7 @@ export function createGeminiJudge(): DedupeJudge {
           matchId: null,
           confidence: 0,
           rationale: "No candidates",
+          provider: "gemini",
         };
       }
 
@@ -200,7 +219,7 @@ export function createGeminiJudge(): DedupeJudge {
       });
 
       const validIds = new Set(candidates.map((c) => c.id));
-      return coerceDecision(raw, validIds);
+      return { ...coerceDecision(raw, validIds), provider: "gemini" };
     },
 
     async judgeSolutionMatch({ submission, candidates }) {
@@ -210,6 +229,7 @@ export function createGeminiJudge(): DedupeJudge {
           matchId: null,
           confidence: 0,
           rationale: "No candidates",
+          provider: "gemini",
         };
       }
 
@@ -219,7 +239,7 @@ export function createGeminiJudge(): DedupeJudge {
       });
 
       const validIds = new Set(candidates.map((c) => c.id));
-      return coerceDecision(raw, validIds);
+      return { ...coerceDecision(raw, validIds), provider: "gemini" };
     },
   };
 }
@@ -237,41 +257,194 @@ export function createConfiguredJudge(): DedupeJudge {
     }
   });
 
+  const confirmMerges = parseBooleanEnv(
+    "SHAREFUL_JUDGE_CONFIRM_MERGES",
+    judges.length > 1
+  );
+
+  const tuning = resolveDedupeTuning();
+
   return {
     async judgeProblemMatch(args) {
-      const errors: Array<{ name: string; error: unknown }> = [];
-      for (const { name, judge } of judges) {
-        try {
-          return await judge.judgeProblemMatch(args);
-        } catch (error) {
-          errors.push({ name, error });
-        }
-      }
+      const primary = await runPrimaryDecision({
+        judges,
+        kind: "problem",
+        args,
+        invoke: (j, callArgs) => j.judgeProblemMatch(callArgs),
+      });
 
-      throw new Error(
-        `All judges failed (problem): ${errors
-          .map((e) => `${e.name}: ${formatProviderError(e.error)}`)
-          .join("; ")}`
-      );
+      const matchDistance = getMatchDistance({
+        decision: primary.decision,
+        candidates: args.candidates,
+      });
+
+      return confirmPrimaryDecision({
+        judges,
+        kind: "problem",
+        args,
+        primary,
+        confirmMerges,
+        matchDistance,
+        autoAcceptMaxDistance: tuning.problem.acceptUnconfirmedMaxDistance,
+        invoke: (j, callArgs) => j.judgeProblemMatch(callArgs),
+      });
     },
 
     async judgeSolutionMatch(args) {
-      const errors: Array<{ name: string; error: unknown }> = [];
-      for (const { name, judge } of judges) {
-        try {
-          return await judge.judgeSolutionMatch(args);
-        } catch (error) {
-          errors.push({ name, error });
-        }
-      }
+      const primary = await runPrimaryDecision({
+        judges,
+        kind: "solution",
+        args,
+        invoke: (j, callArgs) => j.judgeSolutionMatch(callArgs),
+      });
 
-      throw new Error(
-        `All judges failed (solution): ${errors
-          .map((e) => `${e.name}: ${formatProviderError(e.error)}`)
-          .join("; ")}`
-      );
+      const matchDistance = getMatchDistance({
+        decision: primary.decision,
+        candidates: args.candidates,
+      });
+
+      return confirmPrimaryDecision({
+        judges,
+        kind: "solution",
+        args,
+        primary,
+        confirmMerges,
+        matchDistance,
+        autoAcceptMaxDistance: tuning.solution.acceptUnconfirmedMaxDistance,
+        invoke: (j, callArgs) => j.judgeSolutionMatch(callArgs),
+      });
     },
   };
+}
+
+interface NamedJudge {
+  name: string;
+  judge: DedupeJudge;
+}
+
+async function runPrimaryDecision<TArgs>(args: {
+  judges: NamedJudge[];
+  kind: "problem" | "solution";
+  args: TArgs;
+  invoke: (judge: DedupeJudge, callArgs: TArgs) => Promise<MatchDecision>;
+}): Promise<{ decision: MatchDecision; provider: string; index: number }> {
+  const errors: Array<{ name: string; error: unknown }> = [];
+
+  for (let i = 0; i < args.judges.length; i++) {
+    const entry = args.judges[i];
+    if (!entry) {
+      continue;
+    }
+    try {
+      const decision = await args.invoke(entry.judge, args.args);
+      return { decision, provider: entry.name, index: i };
+    } catch (error) {
+      errors.push({ name: entry.name, error });
+    }
+  }
+
+  throw new Error(
+    `All judges failed (${args.kind}): ${errors
+      .map((e) => `${e.name}: ${formatProviderError(e.error)}`)
+      .join("; ")}`
+  );
+}
+
+async function confirmPrimaryDecision<TArgs>(args: {
+  judges: NamedJudge[];
+  kind: "problem" | "solution";
+  args: TArgs;
+  primary: { decision: MatchDecision; provider: string; index: number };
+  confirmMerges: boolean;
+  matchDistance: number | null;
+  autoAcceptMaxDistance: number;
+  invoke: (judge: DedupeJudge, callArgs: TArgs) => Promise<MatchDecision>;
+}): Promise<MatchDecision> {
+  const primaryDecision = args.primary.decision;
+
+  if (primaryDecision.decision === "new") {
+    return primaryDecision;
+  }
+
+  if (!args.confirmMerges || args.judges.length < 2) {
+    return primaryDecision;
+  }
+
+  // If the match is extremely close, accept the primary decision without paying the
+  // latency/cost of a second model.
+  if (
+    typeof args.matchDistance === "number" &&
+    args.matchDistance <= args.autoAcceptMaxDistance
+  ) {
+    return primaryDecision;
+  }
+
+  const confirmations: NonNullable<MatchDecision["confirmations"]> = [];
+  const confirmErrors: Array<{ name: string; error: unknown }> = [];
+
+  for (let i = args.primary.index + 1; i < args.judges.length; i++) {
+    const entry = args.judges[i];
+    if (!entry) {
+      continue;
+    }
+    try {
+      const decision = await args.invoke(entry.judge, args.args);
+      confirmations.push({
+        provider: entry.name,
+        decision: decision.decision,
+        matchId: decision.matchId,
+        confidence: decision.confidence,
+        rationale: decision.rationale,
+      });
+
+      if (
+        decision.decision === "same" &&
+        decision.matchId !== null &&
+        decision.matchId === primaryDecision.matchId
+      ) {
+        return {
+          ...primaryDecision,
+          confirmedBy: entry.name,
+          confirmations,
+        };
+      }
+
+      return {
+        decision: "new",
+        matchId: null,
+        confidence: 0,
+        provider: args.primary.provider,
+        confirmations,
+        rationale: `Primary (${args.primary.provider}) proposed merge to ${primaryDecision.matchId}, but confirmer (${entry.name}) disagreed.`,
+      };
+    } catch (error) {
+      confirmErrors.push({ name: entry.name, error });
+    }
+  }
+
+  return {
+    ...primaryDecision,
+    confirmations,
+    rationale:
+      `${primaryDecision.rationale} | Confirmation unavailable: ${confirmErrors
+        .map((e) => `${e.name}: ${formatProviderError(e.error)}`)
+        .join("; ")}`.slice(0, 800),
+  };
+}
+
+function getMatchDistance(args: {
+  decision: MatchDecision;
+  candidates: Array<{ id: number; distance: number }>;
+}): number | null {
+  if (!(args.decision.decision === "same" && args.decision.matchId !== null)) {
+    return null;
+  }
+
+  const distance = args.candidates.find(
+    (c) => c.id === args.decision.matchId
+  )?.distance;
+
+  return typeof distance === "number" ? distance : null;
 }
 
 function assertNeverProvider(value: never): never {

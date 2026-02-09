@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { createHashEmbeddingProvider } from "@/lib/dedupe/embeddings";
 import { createInMemoryDedupeStore } from "@/lib/dedupe/in-memory-store";
 import { ingestProblemSolution } from "@/lib/dedupe/ingest";
@@ -55,6 +55,39 @@ function createDatasetJudge(): DedupeJudge {
 }
 
 describe("dedupe ingest (in-memory)", () => {
+  const prevEnv: Record<string, string | undefined> = {};
+
+  beforeAll(() => {
+    const keys = [
+      "SHAREFUL_DEDUPE_PROBLEM_JUDGE_MAX_DISTANCE",
+      "SHAREFUL_DEDUPE_SOLUTION_JUDGE_MAX_DISTANCE",
+      "SHAREFUL_DEDUPE_PROBLEM_ACCEPT_UNCONFIRMED_MAX_DISTANCE",
+      "SHAREFUL_DEDUPE_SOLUTION_ACCEPT_UNCONFIRMED_MAX_DISTANCE",
+      "SHAREFUL_JUDGE_CONFIRM_MERGES",
+    ] as const;
+
+    for (const k of keys) {
+      prevEnv[k] = process.env[k];
+    }
+
+    // Disable distance-based safety gating for deterministic in-memory tests.
+    process.env.SHAREFUL_DEDUPE_PROBLEM_JUDGE_MAX_DISTANCE = "2";
+    process.env.SHAREFUL_DEDUPE_SOLUTION_JUDGE_MAX_DISTANCE = "2";
+    process.env.SHAREFUL_DEDUPE_PROBLEM_ACCEPT_UNCONFIRMED_MAX_DISTANCE = "2";
+    process.env.SHAREFUL_DEDUPE_SOLUTION_ACCEPT_UNCONFIRMED_MAX_DISTANCE = "2";
+    process.env.SHAREFUL_JUDGE_CONFIRM_MERGES = "0";
+  });
+
+  afterAll(() => {
+    for (const [key, value] of Object.entries(prevEnv)) {
+      if (value === undefined) {
+        delete process.env[key];
+      } else {
+        process.env[key] = value;
+      }
+    }
+  });
+
   it("creates one canonical problem per problemGroup and increments seenCount per (problem, solution) pair", async () => {
     const store = createInMemoryDedupeStore();
     const embeddings = createHashEmbeddingProvider(128);

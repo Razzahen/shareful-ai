@@ -1,5 +1,7 @@
+import { applyUnconfirmedMatchPolicy } from "./policy";
 import type { DedupeJudge, DedupeStore, EmbeddingProvider } from "./providers";
 import { buildProblemEmbeddingText } from "./text";
+import { resolveDedupeTuning } from "./tuning";
 import type {
   MatchDecision,
   ProblemCandidate,
@@ -38,6 +40,7 @@ export async function searchProblemSolutions(args: {
 }): Promise<ProblemSearchResult> {
   const strict = args.strict ?? false;
   const query = sanitizeQuery(args.query);
+  const tuning = resolveDedupeTuning();
 
   const problemCandidates =
     args.limits?.problemCandidates ?? DEFAULT_PROBLEM_CANDIDATES;
@@ -63,6 +66,12 @@ export async function searchProblemSolutions(args: {
   let exactJudge: MatchDecision | undefined;
 
   if (strict && args.judge && candidates.length > 0) {
+    const judgedCandidates = selectCandidatesForJudge({
+      candidates,
+      maxDistance: tuning.problem.judgeMaxDistance,
+      maxCandidates: tuning.problem.maxCandidatesToJudge,
+    });
+
     const submission: ProblemSolutionSubmission = {
       problem: query.problem,
       solution: "(not provided)",
@@ -74,13 +83,22 @@ export async function searchProblemSolutions(args: {
 
     const judgeDecision = await args.judge.judgeProblemMatch({
       submission,
-      candidates,
+      candidates: judgedCandidates,
     });
-    exactJudge = judgeDecision;
+    const effectiveDecision = applyUnconfirmedMatchPolicy({
+      judge: judgeDecision,
+      candidates,
+      acceptUnconfirmedMaxDistance: tuning.problem.acceptUnconfirmedMaxDistance,
+    });
 
-    if (judgeDecision.decision === "same" && judgeDecision.matchId !== null) {
+    exactJudge = effectiveDecision;
+
+    if (
+      effectiveDecision.decision === "same" &&
+      effectiveDecision.matchId !== null
+    ) {
       exactCandidate =
-        candidates.find((c) => c.id === judgeDecision.matchId) ?? null;
+        candidates.find((c) => c.id === effectiveDecision.matchId) ?? null;
     }
   }
 
@@ -127,4 +145,13 @@ function sanitizeQuery(query: ProblemSearchQuery): ProblemSearchQuery {
     errorSignature: query.errorSignature?.trim() || undefined,
     metadata: query.metadata ?? undefined,
   };
+}
+
+function selectCandidatesForJudge<T extends { distance: number }>(args: {
+  candidates: T[];
+  maxDistance: number;
+  maxCandidates: number;
+}): T[] {
+  const within = args.candidates.filter((c) => c.distance <= args.maxDistance);
+  return within.slice(0, args.maxCandidates);
 }

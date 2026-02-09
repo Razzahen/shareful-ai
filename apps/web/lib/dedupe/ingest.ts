@@ -1,13 +1,17 @@
+import { applyUnconfirmedMatchPolicy } from "./policy";
 import type { DedupeJudge, DedupeStore, EmbeddingProvider } from "./providers";
 import {
   buildProblemEmbeddingText,
   buildSolutionEmbeddingText,
   solutionHash,
 } from "./text";
+import { resolveDedupeTuning } from "./tuning";
 import type {
   IngestResult,
   MatchDecision,
+  ProblemCandidate,
   ProblemSolutionSubmission,
+  SolutionCandidate,
 } from "./types";
 
 const DEFAULT_PROBLEM_CANDIDATES = 50;
@@ -27,6 +31,7 @@ export async function ingestProblemSolution(args: {
 }): Promise<IngestResult> {
   const source = args.source ?? "skill";
   const submission = sanitizeSubmission(args.submission);
+  const tuning = resolveDedupeTuning();
 
   const problemLimit =
     args.limits?.problemCandidates ?? DEFAULT_PROBLEM_CANDIDATES;
@@ -42,8 +47,10 @@ export async function ingestProblemSolution(args: {
     submission,
     store: args.store,
     judge: args.judge,
-    embedding: problemEmbedding,
+    problemEmbedding,
+    solutionEmbedding,
     limit: problemLimit,
+    tuning,
   });
 
   const solution = await resolveSolution({
@@ -53,6 +60,7 @@ export async function ingestProblemSolution(args: {
     problemId: problem.id,
     embedding: solutionEmbedding,
     limit: solutionLimit,
+    tuning,
   });
 
   const link = await args.store.upsertProblemSolutionLink({
@@ -71,7 +79,19 @@ export async function ingestProblemSolution(args: {
       problem: problem.judge,
       solution: solution.judge,
       candidates: {
-        problems: problem.candidates.map((c) => ({
+        problems: problem.candidates.all.map((c) => ({
+          id: c.id,
+          distance: c.distance,
+        })),
+        problemsJudged: problem.candidates.judged.map((c) => ({
+          id: c.id,
+          distance: c.distance,
+        })),
+        solutions: solution.candidates.all.map((c) => ({
+          id: c.id,
+          distance: c.distance,
+        })),
+        solutionsJudged: solution.candidates.judged.map((c) => ({
           id: c.id,
           distance: c.distance,
         })),
@@ -119,29 +139,68 @@ async function resolveProblem(args: {
   submission: ProblemSolutionSubmission;
   store: DedupeStore;
   judge: DedupeJudge;
-  embedding: number[];
+  problemEmbedding: number[];
+  solutionEmbedding: number[];
   limit: number;
+  tuning: ReturnType<typeof resolveDedupeTuning>;
 }): Promise<{
   id: number;
   action: "created" | "matched";
   judge: MatchDecision;
-  candidates: Awaited<ReturnType<DedupeStore["findSimilarProblems"]>>;
+  candidates: { all: ProblemCandidate[]; judged: ProblemCandidate[] };
 }> {
-  const candidates = await args.store.findSimilarProblems({
-    embedding: args.embedding,
+  const baseCandidates = await args.store.findSimilarProblems({
+    embedding: args.problemEmbedding,
     limit: args.limit,
+    language: args.submission.language,
+    framework: args.submission.framework,
   });
 
-  const judge =
-    candidates.length > 0
-      ? await args.judge.judgeProblemMatch({
-          submission: args.submission,
-          candidates,
-        })
-      : newDecision("No candidates");
+  const derivedCandidates = args.tuning.retrieval
+    .useSolutionDerivedProblemCandidates
+    ? await args.store.findSimilarProblemsViaSolutions({
+        problemEmbedding: args.problemEmbedding,
+        solutionEmbedding: args.solutionEmbedding,
+        limitSolutions: args.tuning.retrieval.solutionDerivedLimitSolutions,
+        limitProblems: args.tuning.retrieval.solutionDerivedLimitProblems,
+        language: args.submission.language,
+        framework: args.submission.framework,
+      })
+    : [];
 
-  if (judge.decision === "same" && judge.matchId !== null) {
-    return { id: judge.matchId, action: "matched", judge, candidates };
+  const mergedCandidates = mergeCandidatesById([
+    ...baseCandidates,
+    ...derivedCandidates,
+  ])
+    .sort((a, b) => a.distance - b.distance)
+    .slice(0, args.limit);
+
+  const judgedCandidates = selectCandidatesForJudge({
+    candidates: mergedCandidates,
+    maxDistance: args.tuning.problem.judgeMaxDistance,
+    maxCandidates: args.tuning.problem.maxCandidatesToJudge,
+  });
+
+  const judge = await safeJudgeProblem({
+    judge: args.judge,
+    submission: args.submission,
+    candidates: judgedCandidates,
+  });
+
+  const effectiveJudge = applyUnconfirmedMatchPolicy({
+    judge,
+    candidates: mergedCandidates,
+    acceptUnconfirmedMaxDistance:
+      args.tuning.problem.acceptUnconfirmedMaxDistance,
+  });
+
+  if (effectiveJudge.decision === "same" && effectiveJudge.matchId !== null) {
+    return {
+      id: effectiveJudge.matchId,
+      action: "matched",
+      judge: effectiveJudge,
+      candidates: { all: mergedCandidates, judged: judgedCandidates },
+    };
   }
 
   const created = await args.store.createProblem({
@@ -150,10 +209,15 @@ async function resolveProblem(args: {
     framework: args.submission.framework ?? null,
     errorSignature: args.submission.errorSignature ?? null,
     metadata: args.submission.metadata ?? null,
-    embedding: args.embedding,
+    embedding: args.problemEmbedding,
   });
 
-  return { id: created.id, action: "created", judge, candidates };
+  return {
+    id: created.id,
+    action: "created",
+    judge: effectiveJudge,
+    candidates: { all: mergedCandidates, judged: judgedCandidates },
+  };
 }
 
 async function resolveSolution(args: {
@@ -163,10 +227,12 @@ async function resolveSolution(args: {
   problemId: number;
   embedding: number[];
   limit: number;
+  tuning: ReturnType<typeof resolveDedupeTuning>;
 }): Promise<{
   id: number;
   action: "created" | "matched";
   judge: MatchDecision;
+  candidates: { all: SolutionCandidate[]; judged: SolutionCandidate[] };
 }> {
   const sHash = solutionHash(args.submission.solution);
 
@@ -184,25 +250,51 @@ async function resolveSolution(args: {
         confidence: 1,
         rationale: "Exact hash match",
       },
+      candidates: { all: [], judged: [] },
     };
   }
 
-  const candidates = await args.store.findSimilarSolutions({
+  const local = await args.store.findSimilarSolutions({
     problemId: args.problemId,
     embedding: args.embedding,
-    limit: args.limit,
+    limit: Math.min(args.limit, args.tuning.solution.localCandidates),
   });
 
-  const judge =
-    candidates.length > 0
-      ? await args.judge.judgeSolutionMatch({
-          submission: args.submission,
-          candidates,
-        })
-      : newDecision("No candidates");
+  const global = await args.store.findSimilarSolutionsGlobal({
+    embedding: args.embedding,
+    limit: Math.min(args.limit, args.tuning.solution.globalCandidates),
+  });
 
-  if (judge.decision === "same" && judge.matchId !== null) {
-    return { id: judge.matchId, action: "matched", judge };
+  const mergedCandidates = mergeSolutionCandidatesById([...local, ...global])
+    .sort((a, b) => a.distance - b.distance)
+    .slice(0, args.limit);
+
+  const judgedCandidates = selectCandidatesForJudge({
+    candidates: mergedCandidates,
+    maxDistance: args.tuning.solution.judgeMaxDistance,
+    maxCandidates: args.tuning.solution.maxCandidatesToJudge,
+  });
+
+  const judge = await safeJudgeSolution({
+    judge: args.judge,
+    submission: args.submission,
+    candidates: judgedCandidates,
+  });
+
+  const effectiveJudge = applyUnconfirmedMatchPolicy({
+    judge,
+    candidates: mergedCandidates,
+    acceptUnconfirmedMaxDistance:
+      args.tuning.solution.acceptUnconfirmedMaxDistance,
+  });
+
+  if (effectiveJudge.decision === "same" && effectiveJudge.matchId !== null) {
+    return {
+      id: effectiveJudge.matchId,
+      action: "matched",
+      judge: effectiveJudge,
+      candidates: { all: mergedCandidates, judged: judgedCandidates },
+    };
   }
 
   const created = await args.store.createSolution({
@@ -212,7 +304,12 @@ async function resolveSolution(args: {
     embedding: args.embedding,
   });
 
-  return { id: created.id, action: "created", judge };
+  return {
+    id: created.id,
+    action: "created",
+    judge: effectiveJudge,
+    candidates: { all: mergedCandidates, judged: judgedCandidates },
+  };
 }
 
 function sanitizeSubmission(
@@ -236,4 +333,79 @@ function sanitizeSubmission(
     errorSignature: submission.errorSignature?.trim() || undefined,
     metadata: submission.metadata ?? undefined,
   };
+}
+
+function mergeCandidatesById(
+  candidates: ProblemCandidate[]
+): ProblemCandidate[] {
+  const byId = new Map<number, ProblemCandidate>();
+  for (const cand of candidates) {
+    const existing = byId.get(cand.id);
+    if (!existing || cand.distance < existing.distance) {
+      byId.set(cand.id, cand);
+    }
+  }
+  return [...byId.values()];
+}
+
+function mergeSolutionCandidatesById(
+  candidates: SolutionCandidate[]
+): SolutionCandidate[] {
+  const byId = new Map<number, SolutionCandidate>();
+  for (const cand of candidates) {
+    const existing = byId.get(cand.id);
+    if (!existing || cand.distance < existing.distance) {
+      byId.set(cand.id, cand);
+    }
+  }
+  return [...byId.values()];
+}
+
+function selectCandidatesForJudge<T extends { distance: number }>(args: {
+  candidates: T[];
+  maxDistance: number;
+  maxCandidates: number;
+}): T[] {
+  const within = args.candidates.filter((c) => c.distance <= args.maxDistance);
+  return within.slice(0, args.maxCandidates);
+}
+
+async function safeJudgeProblem(args: {
+  judge: DedupeJudge;
+  submission: ProblemSolutionSubmission;
+  candidates: ProblemCandidate[];
+}): Promise<MatchDecision> {
+  if (args.candidates.length === 0) {
+    return newDecision("No candidates within distance threshold");
+  }
+
+  try {
+    return await args.judge.judgeProblemMatch({
+      submission: args.submission,
+      candidates: args.candidates,
+    });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Unknown error";
+    return newDecision(`Judge failed (problem): ${message.slice(0, 200)}`);
+  }
+}
+
+async function safeJudgeSolution(args: {
+  judge: DedupeJudge;
+  submission: ProblemSolutionSubmission;
+  candidates: SolutionCandidate[];
+}): Promise<MatchDecision> {
+  if (args.candidates.length === 0) {
+    return newDecision("No candidates within distance threshold");
+  }
+
+  try {
+    return await args.judge.judgeSolutionMatch({
+      submission: args.submission,
+      candidates: args.candidates,
+    });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Unknown error";
+    return newDecision(`Judge failed (solution): ${message.slice(0, 200)}`);
+  }
 }

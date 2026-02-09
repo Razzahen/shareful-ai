@@ -1,6 +1,12 @@
 import { and, desc, eq, inArray, sql } from "drizzle-orm";
 import { db } from "./db";
-import { leaderboardEntries, outcomes, shares, verifications } from "./schema";
+import {
+  leaderboardEntries,
+  outcomes,
+  problemSolutions,
+  shares,
+  verifications,
+} from "./schema";
 import type { ContributorProfile, Reputation, ShareWithStats } from "./types";
 
 async function recalculateReputation(username: string): Promise<Reputation> {
@@ -158,7 +164,11 @@ export async function recordOutcome(
   outcome: "success" | "failure"
 ): Promise<void> {
   const [share] = await db
-    .select({ id: shares.id })
+    .select({
+      id: shares.id,
+      canonicalProblemId: shares.canonicalProblemId,
+      canonicalSolutionId: shares.canonicalSolutionId,
+    })
     .from(shares)
     .where(
       and(eq(shares.owner, owner), eq(shares.repo, repo), eq(shares.slug, slug))
@@ -191,6 +201,14 @@ export async function recordOutcome(
       });
   }
 
+  if (share.canonicalProblemId && share.canonicalSolutionId) {
+    await incrementCanonicalOutcome({
+      problemId: share.canonicalProblemId,
+      solutionId: share.canonicalSolutionId,
+      outcome,
+    });
+  }
+
   await recalculateReputation(owner);
 }
 
@@ -201,7 +219,11 @@ export async function recordVerification(
   githubUser: string
 ): Promise<{ count: number; alreadyVerified: boolean }> {
   const [share] = await db
-    .select({ id: shares.id })
+    .select({
+      id: shares.id,
+      canonicalProblemId: shares.canonicalProblemId,
+      canonicalSolutionId: shares.canonicalSolutionId,
+    })
     .from(shares)
     .where(
       and(eq(shares.owner, owner), eq(shares.repo, repo), eq(shares.slug, slug))
@@ -227,7 +249,75 @@ export async function recordVerification(
     .from(verifications)
     .where(eq(verifications.shareId, share.id));
 
+  if (share.canonicalProblemId && share.canonicalSolutionId) {
+    await incrementCanonicalVerification({
+      problemId: share.canonicalProblemId,
+      solutionId: share.canonicalSolutionId,
+    });
+  }
+
   await recalculateReputation(owner);
 
   return { count: countResult?.count ?? 0, alreadyVerified: false };
+}
+
+async function incrementCanonicalOutcome(args: {
+  problemId: number;
+  solutionId: number;
+  outcome: "success" | "failure";
+}): Promise<void> {
+  const base = {
+    problemId: args.problemId,
+    solutionId: args.solutionId,
+    // This is NOT a submission count; avoid inflating seen_count from outcome events.
+    seenCount: 0,
+    successCount: args.outcome === "success" ? 1 : 0,
+    failureCount: args.outcome === "failure" ? 1 : 0,
+    verificationCount: 0,
+    createdAt: new Date(),
+    updatedAt: new Date(),
+  };
+
+  await db
+    .insert(problemSolutions)
+    .values(base)
+    .onConflictDoUpdate({
+      target: [problemSolutions.problemId, problemSolutions.solutionId],
+      set: {
+        successCount:
+          args.outcome === "success"
+            ? sql`${problemSolutions.successCount} + 1`
+            : problemSolutions.successCount,
+        failureCount:
+          args.outcome === "failure"
+            ? sql`${problemSolutions.failureCount} + 1`
+            : problemSolutions.failureCount,
+        updatedAt: new Date(),
+      },
+    });
+}
+
+async function incrementCanonicalVerification(args: {
+  problemId: number;
+  solutionId: number;
+}): Promise<void> {
+  await db
+    .insert(problemSolutions)
+    .values({
+      problemId: args.problemId,
+      solutionId: args.solutionId,
+      seenCount: 0,
+      successCount: 0,
+      failureCount: 0,
+      verificationCount: 1,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    })
+    .onConflictDoUpdate({
+      target: [problemSolutions.problemId, problemSolutions.solutionId],
+      set: {
+        verificationCount: sql`${problemSolutions.verificationCount} + 1`,
+        updatedAt: new Date(),
+      },
+    });
 }

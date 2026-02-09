@@ -100,6 +100,45 @@ export function createInMemoryDedupeStore(): DedupeStore & {
       );
     },
 
+    findSimilarProblemsViaSolutions({
+      problemEmbedding,
+      solutionEmbedding,
+      limitSolutions,
+      limitProblems,
+      language,
+      framework,
+    }): Promise<ProblemCandidate[]> {
+      const solutionDistanceById = computeTopSolutionDistances({
+        solutions,
+        solutionEmbedding,
+        limit: limitSolutions,
+      });
+
+      if (solutionDistanceById.size === 0) {
+        return Promise.resolve([]);
+      }
+
+      const minSolutionDistanceByProblemId =
+        computeMinSolutionDistanceByProblemId({
+          links,
+          solutionDistanceById,
+        });
+
+      const candidates = buildProblemCandidatesFromMinDistances({
+        problems,
+        minSolutionDistanceByProblemId,
+        problemEmbedding,
+        language,
+        framework,
+      });
+
+      return Promise.resolve(
+        candidates
+          .sort((a, b) => a.distance - b.distance)
+          .slice(0, limitProblems)
+      );
+    },
+
     createProblem(args): Promise<{ id: number }> {
       const id = nextProblemId++;
       problems.push({
@@ -143,6 +182,24 @@ export function createInMemoryDedupeStore(): DedupeStore & {
       }
       return Promise.resolve(
         candidates.sort((a, b) => a.distance - b.distance).slice(0, limit)
+      );
+    },
+
+    findSimilarSolutionsGlobal({
+      embedding,
+      limit,
+    }): Promise<SolutionCandidate[]> {
+      return Promise.resolve(
+        solutions
+          .map((s) => ({
+            id: s.id,
+            canonicalSolution: s.canonicalSolution,
+            solutionHash: s.solutionHash,
+            metadata: s.metadata,
+            distance: cosineDistance(s.embedding, embedding),
+          }))
+          .sort((a, b) => a.distance - b.distance)
+          .slice(0, limit)
       );
     },
 
@@ -268,6 +325,92 @@ function cosineDistance(a: number[], b: number[]): number {
   const cos = dot / denom;
   // Convert similarity [-1..1] to distance [0..2].
   return 1 - cos;
+}
+
+function computeTopSolutionDistances(args: {
+  solutions: StoredSolution[];
+  solutionEmbedding: number[];
+  limit: number;
+}): Map<number, number> {
+  const ranked = args.solutions
+    .map((s) => ({
+      id: s.id,
+      distance: cosineDistance(s.embedding, args.solutionEmbedding),
+    }))
+    .sort((a, b) => a.distance - b.distance)
+    .slice(0, args.limit);
+
+  const out = new Map<number, number>();
+  for (const row of ranked) {
+    out.set(row.id, row.distance);
+  }
+  return out;
+}
+
+function computeMinSolutionDistanceByProblemId(args: {
+  links: Map<
+    string,
+    {
+      problemId: number;
+      solutionId: number;
+      seenCount: number;
+      successCount: number;
+      failureCount: number;
+      verificationCount: number;
+    }
+  >;
+  solutionDistanceById: Map<number, number>;
+}): Map<number, number> {
+  const out = new Map<number, number>();
+  for (const link of args.links.values()) {
+    const distance = args.solutionDistanceById.get(link.solutionId);
+    if (typeof distance !== "number") {
+      continue;
+    }
+    const existing = out.get(link.problemId);
+    if (existing === undefined || distance < existing) {
+      out.set(link.problemId, distance);
+    }
+  }
+  return out;
+}
+
+function buildProblemCandidatesFromMinDistances(args: {
+  problems: StoredProblem[];
+  minSolutionDistanceByProblemId: Map<number, number>;
+  problemEmbedding: number[];
+  language?: string;
+  framework?: string;
+}): ProblemCandidate[] {
+  const candidates: ProblemCandidate[] = [];
+
+  for (const p of args.problems) {
+    const minSolutionDistance = args.minSolutionDistanceByProblemId.get(p.id);
+    if (minSolutionDistance === undefined) {
+      continue;
+    }
+    if (args.language && p.language && p.language !== args.language) {
+      continue;
+    }
+    if (args.framework && p.framework && p.framework !== args.framework) {
+      continue;
+    }
+
+    const problemDistance = cosineDistance(p.embedding, args.problemEmbedding);
+    const distance = Math.min(problemDistance, minSolutionDistance);
+
+    candidates.push({
+      id: p.id,
+      canonicalProblem: p.canonicalProblem,
+      language: p.language,
+      framework: p.framework,
+      errorSignature: p.errorSignature,
+      metadata: p.metadata,
+      distance,
+    });
+  }
+
+  return candidates;
 }
 
 function computeSolutionScore(link: {

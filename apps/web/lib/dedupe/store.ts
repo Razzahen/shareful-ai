@@ -1,4 +1,4 @@
-import { and, eq, isNull, or, type SQL, sql } from "drizzle-orm";
+import { and, eq, inArray, isNull, or, type SQL, sql } from "drizzle-orm";
 import { db } from "@/lib/db";
 import {
   problemSolutions,
@@ -84,6 +84,118 @@ export function createDrizzleDedupeStore(): DedupeStore {
       return rows;
     },
 
+    async findSimilarProblemsViaSolutions({
+      problemEmbedding,
+      solutionEmbedding,
+      limitSolutions,
+      limitProblems,
+      language,
+      framework,
+    }): Promise<ProblemCandidate[]> {
+      requireEmbeddingDimension(problemEmbedding);
+      requireEmbeddingDimension(solutionEmbedding);
+
+      const solutionVec = toVectorLiteral(solutionEmbedding);
+      const solutionDistanceExpr = sql<number>`(${solutions.solutionEmbedding} <=> ${solutionVec}::vector)`;
+
+      const similarSolutions = await db
+        .select({ id: solutions.id })
+        .from(solutions)
+        .orderBy(solutionDistanceExpr)
+        .limit(limitSolutions);
+
+      const solutionIds = similarSolutions.map((s) => s.id);
+      if (solutionIds.length === 0) {
+        return [];
+      }
+
+      // 1) Find problems linked to the most similar solutions, ordered by best solution match.
+      const problemRows = await db
+        .select({
+          problemId: problemSolutions.problemId,
+          minSolutionDistance: sql<number>`MIN(${solutionDistanceExpr})`,
+        })
+        .from(problemSolutions)
+        .innerJoin(solutions, eq(problemSolutions.solutionId, solutions.id))
+        .where(inArray(solutions.id, solutionIds))
+        .groupBy(problemSolutions.problemId)
+        .orderBy(sql`MIN(${solutionDistanceExpr})`)
+        .limit(limitProblems);
+
+      const problemIds = problemRows.map((p) => p.problemId);
+      if (problemIds.length === 0) {
+        return [];
+      }
+
+      const minSolutionDistanceByProblemId = new Map<number, number>();
+      for (const row of problemRows) {
+        minSolutionDistanceByProblemId.set(
+          row.problemId,
+          row.minSolutionDistance
+        );
+      }
+
+      // 2) Fetch those problems and compute problem-distance. Use the better of:
+      // - problem embedding distance
+      // - min linked-solution embedding distance
+      //
+      // This makes the candidate set useful even when the problem text is sparse but the solution is distinctive.
+      const problemVec = toVectorLiteral(problemEmbedding);
+      const problemDistanceExpr = sql<number>`(${problems.problemEmbedding} <=> ${problemVec}::vector)`;
+
+      const filters: SQL[] = [inArray(problems.id, problemIds)];
+
+      if (language) {
+        const filter = or(
+          eq(problems.language, language),
+          isNull(problems.language)
+        );
+        if (filter) {
+          filters.push(filter);
+        }
+      }
+
+      if (framework) {
+        const filter = or(
+          eq(problems.framework, framework),
+          isNull(problems.framework)
+        );
+        if (filter) {
+          filters.push(filter);
+        }
+      }
+
+      const whereClause = and(...filters);
+
+      const rows = await db
+        .select({
+          id: problems.id,
+          canonicalProblem: problems.canonicalProblem,
+          language: problems.language,
+          framework: problems.framework,
+          errorSignature: problems.errorSignature,
+          metadata: problems.metadata,
+          distance: problemDistanceExpr,
+        })
+        .from(problems)
+        .where(whereClause)
+        .orderBy(problemDistanceExpr)
+        .limit(limitProblems);
+
+      return rows
+        .map((r) => {
+          const minSolutionDistance = minSolutionDistanceByProblemId.get(r.id);
+          if (typeof minSolutionDistance === "number") {
+            return {
+              ...r,
+              distance: Math.min(r.distance, minSolutionDistance),
+            };
+          }
+          return r;
+        })
+        .sort((a, b) => a.distance - b.distance);
+    },
+
     async createProblem(args): Promise<{ id: number }> {
       requireEmbeddingDimension(args.embedding);
       const [row] = await db
@@ -130,6 +242,29 @@ export function createDrizzleDedupeStore(): DedupeStore {
         .from(problemSolutions)
         .innerJoin(solutions, eq(problemSolutions.solutionId, solutions.id))
         .where(eq(problemSolutions.problemId, problemId))
+        .orderBy(distanceExpr)
+        .limit(limit);
+
+      return rows;
+    },
+
+    async findSimilarSolutionsGlobal({
+      embedding,
+      limit,
+    }): Promise<SolutionCandidate[]> {
+      requireEmbeddingDimension(embedding);
+      const vec = toVectorLiteral(embedding);
+      const distanceExpr = sql<number>`(${solutions.solutionEmbedding} <=> ${vec}::vector)`;
+
+      const rows = await db
+        .select({
+          id: solutions.id,
+          canonicalSolution: solutions.canonicalSolution,
+          solutionHash: solutions.solutionHash,
+          metadata: solutions.metadata,
+          distance: distanceExpr,
+        })
+        .from(solutions)
         .orderBy(distanceExpr)
         .limit(limit);
 

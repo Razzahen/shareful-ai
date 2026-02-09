@@ -1,6 +1,7 @@
 import { and, eq } from "drizzle-orm";
 import { logIndexEvent } from "./audit";
 import { db } from "./db";
+import { canonicalizeShare } from "./dedupe/canonicalize-share";
 import {
   discoverShareSlugs,
   fetchDefaultBranchSha,
@@ -93,6 +94,25 @@ export async function indexRepo(owner: string, repo: string): Promise<number> {
         await db
           .insert(shareTags)
           .values(tagIds.map((tagId) => ({ shareId: share.id, tagId })));
+      }
+
+      if (process.env.SHAREFUL_CANONICALIZE_ON_INDEX === "1") {
+        try {
+          await canonicalizeShare({
+            shareId: share.id,
+            owner,
+            repo,
+            slug: frontmatter.slug,
+            frontmatterProblem: frontmatter.problem,
+            content,
+            environment: frontmatter.environment ?? null,
+          });
+        } catch (e) {
+          console.error(
+            `Failed to canonicalize ${owner}/${repo}/${frontmatter.slug}:`,
+            e
+          );
+        }
       }
 
       indexed++;

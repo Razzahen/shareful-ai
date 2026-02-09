@@ -227,6 +227,14 @@ export const shares = pgTable(
       version?: string;
     }>(),
     related: jsonb("related").$type<string[]>(),
+    canonicalProblemId: integer("canonical_problem_id").references(
+      () => problems.id,
+      { onDelete: "set null" }
+    ),
+    canonicalSolutionId: integer("canonical_solution_id").references(
+      () => solutions.id,
+      { onDelete: "set null" }
+    ),
     createdAt: timestamp("created_at", { withTimezone: true }),
     updatedAt: timestamp("updated_at", { withTimezone: true }),
     indexedAt: timestamp("indexed_at", { withTimezone: true })
@@ -253,6 +261,8 @@ export const shares = pgTable(
     index("shares_owner_idx").on(table.owner),
     index("shares_solution_type_idx").on(table.solutionType),
     index("shares_created_at_idx").on(table.createdAt),
+    index("shares_canonical_problem_id_idx").on(table.canonicalProblemId),
+    index("shares_canonical_solution_id_idx").on(table.canonicalSolutionId),
     // GIN indexes for FTS + trigram are created in drizzle/0001_setup_fts.sql
     // after pg_trgm extension is enabled and search_vector is cast to tsvector
   ]
