@@ -36,7 +36,7 @@ export function SearchBar({
           size === "large" ? "h-14 rounded-xl pl-12 text-lg" : "h-10 pl-9"
         }
         onChange={(e) => setQuery(e.target.value)}
-        placeholder="Search for solutions... (e.g. nextjs hydration error)"
+        placeholder="nextjs hydration error, Docker build fail..."
         type="search"
         value={query}
       />

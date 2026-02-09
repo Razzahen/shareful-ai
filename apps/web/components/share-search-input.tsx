@@ -100,7 +100,7 @@ export function ShareSearchInput() {
         autoFocus={isSearchRoute}
         name="q"
         onChange={(event) => updateQuery(event.target.value)}
-        placeholder="Search for solutions..."
+        placeholder="nextjs hydration error, Docker build fail..."
         ref={inputRef}
         value={query}
       />
