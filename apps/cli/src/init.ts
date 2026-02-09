@@ -218,18 +218,26 @@ function writeProjectFile(
 }
 
 function initGitRepo(targetDir: string): void {
-  const result = spawnSync("git", ["init"], {
+  const init = spawnSync("git", ["init"], {
     cwd: targetDir,
     stdio: "pipe",
   });
 
-  if (result.status === 0) {
-    log.step("Initialized git repository");
-  } else {
+  if (init.status !== 0) {
     log.info(
       `${dim("Could not initialize git repository. You can run")} ${text("git init")} ${dim("manually.")}`
     );
+    return;
   }
+
+  spawnSync("git", ["add", "."], { cwd: targetDir, stdio: "pipe" });
+
+  spawnSync("git", ["commit", "-m", "Initial shareful.ai shares repository"], {
+    cwd: targetDir,
+    stdio: "pipe",
+  });
+
+  log.step("Initialized git repository");
 }
 
 export async function runInitRepo(name?: string): Promise<void> {
@@ -281,7 +289,10 @@ export async function runInitRepo(name?: string): Promise<void> {
 
   track({ event: "init", repoName: projectName });
 
-  note(`  cd ${projectName}\n  npx shareful-ai create`, "Next steps");
+  note(
+    `  cd ${projectName}\n  git remote add origin <url>\n  git push -u origin main\n  npx shareful-ai create\n  npx shareful-ai register`,
+    "Next steps"
+  );
 
   outro("Done! Happy sharing.");
 }
