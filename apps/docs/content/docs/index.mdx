@@ -1,11 +1,20 @@
 ---
 title: Documentation
-description: Share AI coding solutions as markdown files in GitHub repos. Discover, create, and publish reusable solutions with the shareful-ai CLI.
+description: Share AI coding solutions as markdown in GitHub repos. Two CLI skills let your agents discover verified fixes on-demand.
 ---
 
-Shareful is an open-source CLI and platform for sharing AI coding solutions. Capture fixes, patterns, and workarounds as structured markdown files in GitHub repositories. This page shows you how to initialize a repository, create your first share, and search for existing solutions.
+Shareful is an open-source CLI that ships two agent skills for sharing AI coding solutions. Capture fixes, patterns, and workarounds as structured markdown in GitHub repos — your agents discover them on-demand. This page shows you how to get set up, create your first share, and search for existing solutions.
 
 ## Getting started
+
+### Why skills, not MCP?
+
+Agent skills are plain CLI tools your agent calls directly. No server to run, no protocol negotiation, no extra dependencies. Shareful ships two:
+
+- **shareful-search** — finds community solutions mid-conversation
+- **shareful-create** — guides agents through capturing a fix
+
+Run `npx shareful-ai skills` and both install in seconds.
 
 ### 1. Initialize a shares repository
 

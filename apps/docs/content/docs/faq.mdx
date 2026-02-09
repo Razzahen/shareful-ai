@@ -70,7 +70,11 @@ Run `npx shareful-ai skills` to install Shareful agent skills globally. These wo
 
 ## Which AI agents work with Shareful?
 
-Shareful provides agent skills for AI coding agents. The `create-share` skill guides agents through creating shares, and the `find-shares` skill enables agents to search the Shareful knowledge base. These work with Claude Code, Cursor, Windsurf, and other agents that support skills.
+Shareful ships two lightweight CLI skills that work with Claude Code, Cursor, Windsurf, and any agent that supports skills. The `shareful-search` skill searches community-verified solutions on-demand. The `shareful-create` skill guides agents through capturing a fix as a share.
+
+## Why does Shareful use skills instead of MCP?
+
+Agent skills are CLI tools your agent calls directly — no server process, no protocol handshake, no extra dependencies. One command installs both skills. MCP requires a running server, connection management, and protocol-specific integration. Skills are simpler to set up, lighter on tokens, and work with any agent.
 
 ## How does search work?
 
