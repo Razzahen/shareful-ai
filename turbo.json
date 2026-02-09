@@ -3,6 +3,7 @@
   "tasks": {
     "build": {
       "dependsOn": ["^build"],
+      "env": ["DATABASE_URL", "DATABASE_URL_UNPOOLED"],
       "outputs": ["dist/**", ".next/**", "out/**"]
     },
     "dev": {
