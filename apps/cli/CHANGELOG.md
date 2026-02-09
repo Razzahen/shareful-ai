@@ -1,5 +1,11 @@
 # shareful-ai
 
+## 0.1.3
+
+### Patch Changes
+
+- 3fc39f1: This patch release includes minor internal updates and maintenance changes with no user-facing modifications.
+
 ## 0.1.2
 
 ### Patch Changes
