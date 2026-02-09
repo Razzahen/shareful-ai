@@ -1,5 +1,6 @@
 import { relations, sql } from "drizzle-orm";
 import {
+  customType,
   index,
   integer,
   jsonb,
@@ -28,6 +29,34 @@ export const aiProviderEnum = pgEnum("ai_provider", [
   "gpt",
   "gemini",
 ]);
+
+// ── Vector (pgvector) ───────────────────────────────────────────
+
+// pgvector stores embeddings as a fixed-length vector (e.g. vector(1536)).
+// We keep the driver representation as a string like "[1,2,3]" to work across
+// serverless Postgres drivers.
+const vector = (dimensions: number) =>
+  customType<{ data: number[]; driverData: string }>({
+    dataType() {
+      return `vector(${dimensions})`;
+    },
+    toDriver(value) {
+      return `[${value.join(",")}]`;
+    },
+    fromDriver(value) {
+      const trimmed = value.trim();
+      if (!(trimmed.startsWith("[") && trimmed.endsWith("]"))) {
+        return [];
+      }
+      const inner = trimmed.slice(1, -1).trim();
+      if (!inner) {
+        return [];
+      }
+      return inner.split(",").map((v) => Number(v.trim()));
+    },
+  });
+
+export const embeddingVector1536 = vector(1536);
 
 // ── Repos ──────────────────────────────────────────────────────
 
@@ -82,6 +111,98 @@ export const indexUpstreams = pgTable(
     status: varchar("status", { length: 16 }).notNull().default("active"),
   },
   (table) => [uniqueIndex("index_upstreams_name_idx").on(table.name)]
+);
+
+// ── Canonical Problems + Solutions ─────────────────────────────
+
+export const problems = pgTable(
+  "problems",
+  {
+    id: serial("id").primaryKey(),
+    canonicalProblem: text("canonical_problem").notNull(),
+    language: varchar("language", { length: 64 }),
+    framework: varchar("framework", { length: 64 }),
+    errorSignature: text("error_signature"),
+    metadata: jsonb("metadata").$type<Record<string, unknown>>(),
+    problemEmbedding: embeddingVector1536("problem_embedding").notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (table) => [
+    index("problems_language_idx").on(table.language),
+    index("problems_framework_idx").on(table.framework),
+  ]
+);
+
+export const solutions = pgTable(
+  "solutions",
+  {
+    id: serial("id").primaryKey(),
+    canonicalSolution: text("canonical_solution").notNull(),
+    solutionHash: varchar("solution_hash", { length: 64 }).notNull(),
+    metadata: jsonb("metadata").$type<Record<string, unknown>>(),
+    solutionEmbedding: embeddingVector1536("solution_embedding").notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (table) => [uniqueIndex("solutions_solution_hash_idx").on(table.solutionHash)]
+);
+
+export const problemSolutions = pgTable(
+  "problem_solutions",
+  {
+    problemId: integer("problem_id")
+      .notNull()
+      .references(() => problems.id, { onDelete: "cascade" }),
+    solutionId: integer("solution_id")
+      .notNull()
+      .references(() => solutions.id, { onDelete: "cascade" }),
+    seenCount: integer("seen_count").notNull().default(1),
+    successCount: integer("success_count").notNull().default(0),
+    failureCount: integer("failure_count").notNull().default(0),
+    verificationCount: integer("verification_count").notNull().default(0),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (table) => [
+    primaryKey({ columns: [table.problemId, table.solutionId] }),
+    index("problem_solutions_problem_id_idx").on(table.problemId),
+    index("problem_solutions_solution_id_idx").on(table.solutionId),
+  ]
+);
+
+export const solutionSubmissions = pgTable(
+  "solution_submissions",
+  {
+    id: serial("id").primaryKey(),
+    source: varchar("source", { length: 32 }).notNull().default("skill"),
+    problemId: integer("problem_id").references(() => problems.id, {
+      onDelete: "set null",
+    }),
+    solutionId: integer("solution_id").references(() => solutions.id, {
+      onDelete: "set null",
+    }),
+    rawProblem: text("raw_problem").notNull(),
+    rawSolution: text("raw_solution").notNull(),
+    metadata: jsonb("metadata").$type<Record<string, unknown>>(),
+    judgeResult: jsonb("judge_result").$type<Record<string, unknown>>(),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (table) => [index("solution_submissions_created_idx").on(table.createdAt)]
 );
 
 // ── Shares ─────────────────────────────────────────────────────
@@ -306,3 +427,25 @@ export const verificationsRelations = relations(verifications, ({ one }) => ({
     references: [shares.id],
   }),
 }));
+
+export const problemsRelations = relations(problems, ({ many }) => ({
+  problemSolutions: many(problemSolutions),
+}));
+
+export const solutionsRelations = relations(solutions, ({ many }) => ({
+  problemSolutions: many(problemSolutions),
+}));
+
+export const problemSolutionsRelations = relations(
+  problemSolutions,
+  ({ one }) => ({
+    problem: one(problems, {
+      fields: [problemSolutions.problemId],
+      references: [problems.id],
+    }),
+    solution: one(solutions, {
+      fields: [problemSolutions.solutionId],
+      references: [solutions.id],
+    }),
+  })
+);

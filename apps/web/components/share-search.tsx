@@ -1,17 +1,26 @@
 "use client";
 
-import { Search } from "lucide-react";
+import { Search, Sparkles } from "lucide-react";
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { type ReactNode, useEffect, useMemo, useRef, useState } from "react";
 
 import { SolutionTypeBadge } from "@/components/solution-type-badge";
 import { Skeleton } from "@/components/ui/skeleton";
+import type {
+  MatchDecision,
+  ProblemCandidate,
+  ProblemSearchQuery,
+  RankedProblemSolution,
+} from "@/lib/dedupe/types";
 import type { ShareWithStats } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
-const MAX_RESULTS = 50;
-const SEARCH_DEBOUNCE_MS = 200;
+const SHARE_MAX_RESULTS = 50;
+const SHARE_SEARCH_DEBOUNCE_MS = 200;
+const PROBLEM_MAX_RESULTS = 20;
+const PROBLEM_SOLUTIONS_PER_PROBLEM = 5;
+const PROBLEM_SEARCH_DEBOUNCE_MS = 500;
 const SEARCH_TIMEOUT_MS = 10_000;
 const INVALID_QUERY_CHARACTERS = /[^a-zA-Z0-9@._/\s-]+/g;
 const QUERY_SPLIT_REGEX = /\s+/;
@@ -114,6 +123,10 @@ function normalizeSearchQuery(value: string) {
     .trim();
 }
 
+function normalizeProblemQuery(value: string) {
+  return value.replace(NORMALIZE_SPACES_REGEX, " ").trim();
+}
+
 function getSearchErrorForStatus(status: number): SearchErrorState {
   if (status === 400) {
     return {
@@ -128,6 +141,16 @@ function getSearchErrorForStatus(status: number): SearchErrorState {
       kind: "server",
       title: "Too many searches at once",
       message: "Give it a moment and try again.",
+      actionLabel: "Retry",
+    };
+  }
+
+  if (status === 503) {
+    return {
+      kind: "meta",
+      title: "AI search is not configured",
+      message:
+        "This search mode requires a configured LLM provider (GEMINI_API_KEY and/or OPENAI_API_KEY).",
       actionLabel: "Retry",
     };
   }
@@ -169,8 +192,7 @@ function buildNetworkSearchError(error: unknown): SearchErrorState {
   return {
     kind: "network",
     title: "Search failed",
-    message:
-      error instanceof Error ? error.message : "Failed to search shares.",
+    message: error instanceof Error ? error.message : "Failed to search.",
     actionLabel: "Retry",
   };
 }
@@ -197,7 +219,7 @@ function resolveSearchError(error: unknown, didTimeout: boolean) {
 function useShareSearchResults(query: string) {
   const [results, setResults] = useState<ShareWithStats[]>([]);
   const [searchError, setSearchError] = useState<SearchErrorState | null>(null);
-  const [_retryToken, setRetryToken] = useState(0);
+  const [retryToken, setRetryToken] = useState(0);
   const [isSearching, setIsSearching] = useState(
     () => normalizeSearchQuery(query).trim().length > 0
   );
@@ -229,7 +251,7 @@ function useShareSearchResults(query: string) {
 
     const scheduleId = window.setTimeout(() => {
       fetch(
-        `/api/search?q=${encodeURIComponent(trimmedQuery)}&limit=${MAX_RESULTS}`,
+        `/api/search?q=${encodeURIComponent(trimmedQuery)}&limit=${SHARE_MAX_RESULTS}&rt=${retryToken}`,
         { signal: controller.signal }
       )
         .then((response) => {
@@ -261,20 +283,122 @@ function useShareSearchResults(query: string) {
           }
           window.clearTimeout(fetchTimeoutId);
         });
-    }, SEARCH_DEBOUNCE_MS);
+    }, SHARE_SEARCH_DEBOUNCE_MS);
 
     return () => {
       controller.abort();
       window.clearTimeout(scheduleId);
       window.clearTimeout(fetchTimeoutId);
     };
-  }, [trimmedQuery]);
+  }, [retryToken, trimmedQuery]);
 
   return {
     results,
     isSearching,
     searchError,
     hasInvalidCharacters,
+    trimmedQuery,
+    retry: () => setRetryToken((value) => value + 1),
+  };
+}
+
+type SearchMode = "shares" | "problems";
+
+interface ProblemSearchHit {
+  problem: ProblemCandidate;
+  solutions: RankedProblemSolution[];
+  judge?: MatchDecision;
+}
+
+interface ProblemSearchResponse {
+  query: ProblemSearchQuery;
+  exact: ProblemSearchHit | null;
+  related: ProblemSearchHit[];
+}
+
+function useProblemSearchResults(
+  query: string,
+  options?: { strict?: boolean }
+) {
+  const strict = options?.strict ?? false;
+
+  const [result, setResult] = useState<ProblemSearchResponse | null>(null);
+  const [searchError, setSearchError] = useState<SearchErrorState | null>(null);
+  const [retryToken, setRetryToken] = useState(0);
+  const [isSearching, setIsSearching] = useState(
+    () => normalizeProblemQuery(query).trim().length > 0
+  );
+  const currentRequestIdRef = useRef(0);
+
+  const trimmedQuery = useMemo(() => normalizeProblemQuery(query), [query]);
+
+  useEffect(() => {
+    if (!trimmedQuery) {
+      setResult(null);
+      setIsSearching(false);
+      setSearchError(null);
+      return;
+    }
+
+    const requestId = currentRequestIdRef.current + 1;
+    currentRequestIdRef.current = requestId;
+    const controller = new AbortController();
+    let didTimeout = false;
+    setIsSearching(true);
+    setSearchError(null);
+
+    const fetchTimeoutId = window.setTimeout(() => {
+      didTimeout = true;
+      controller.abort();
+    }, SEARCH_TIMEOUT_MS);
+
+    const scheduleId = window.setTimeout(() => {
+      const strictParam = strict ? "&strict=1" : "";
+      fetch(
+        `/api/problem-search?q=${encodeURIComponent(trimmedQuery)}&limit=${PROBLEM_MAX_RESULTS}&solutions=${PROBLEM_SOLUTIONS_PER_PROBLEM}${strictParam}&rt=${retryToken}`,
+        { signal: controller.signal }
+      )
+        .then((response) => {
+          if (!response.ok) {
+            throw getSearchErrorForStatus(response.status);
+          }
+          return response.json();
+        })
+        .then((data: ProblemSearchResponse) => {
+          if (currentRequestIdRef.current !== requestId) {
+            return;
+          }
+          setResult(data);
+        })
+        .catch((err: unknown) => {
+          if (currentRequestIdRef.current !== requestId) {
+            return;
+          }
+
+          const resolvedError = resolveSearchError(err, didTimeout);
+          if (resolvedError) {
+            setSearchError(resolvedError);
+          }
+        })
+        .finally(() => {
+          if (currentRequestIdRef.current === requestId) {
+            setIsSearching(false);
+          }
+          window.clearTimeout(fetchTimeoutId);
+        });
+    }, PROBLEM_SEARCH_DEBOUNCE_MS);
+
+    return () => {
+      controller.abort();
+      window.clearTimeout(scheduleId);
+      window.clearTimeout(fetchTimeoutId);
+    };
+  }, [retryToken, strict, trimmedQuery]);
+
+  return {
+    result,
+    isSearching,
+    searchError,
     trimmedQuery,
     retry: () => setRetryToken((value) => value + 1),
   };
@@ -457,17 +581,248 @@ function ShareSearchResultsSection({
   );
 }
 
-export function ShareSearch() {
-  const searchParams = useSearchParams();
-  const queryFromParams = searchParams.get("q") ?? "";
+function SearchModeToggle({
+  mode,
+  onChange,
+}: {
+  mode: SearchMode;
+  onChange: (mode: SearchMode) => void;
+}) {
+  return (
+    <div className="flex items-center justify-between gap-3">
+      <div className="inline-flex items-center rounded-full border border-border/70 bg-muted/30 p-1">
+        <button
+          aria-pressed={mode === "shares"}
+          className={cn(
+            "inline-flex h-8 items-center justify-center rounded-full px-3 text-sm transition-colors",
+            mode === "shares"
+              ? "bg-foreground text-background"
+              : "text-muted-foreground hover:bg-foreground/5 hover:text-foreground"
+          )}
+          onClick={() => onChange("shares")}
+          type="button"
+        >
+          Shares
+        </button>
+        <button
+          aria-pressed={mode === "problems"}
+          className={cn(
+            "inline-flex h-8 items-center justify-center gap-2 rounded-full px-3 text-sm transition-colors",
+            mode === "problems"
+              ? "bg-foreground text-background"
+              : "text-muted-foreground hover:bg-foreground/5 hover:text-foreground"
+          )}
+          onClick={() => onChange("problems")}
+          type="button"
+        >
+          <Sparkles className="size-4" />
+          Problems
+        </button>
+      </div>
+      <span className="text-muted-foreground text-xs">
+        {mode === "shares"
+          ? "Fast keyword search"
+          : "Vector search + optional strict match"}
+      </span>
+    </div>
+  );
+}
 
+function formatProblemContext(problem: ProblemCandidate): string {
+  const parts: string[] = [];
+  if (problem.language) {
+    parts.push(problem.language);
+  }
+  if (problem.framework) {
+    parts.push(problem.framework);
+  }
+  if (problem.errorSignature) {
+    const error = problem.errorSignature.trim();
+    parts.push(error.length > 80 ? `${error.slice(0, 80)}...` : error);
+  }
+  return parts.join(" · ");
+}
+
+function extractSolutionPreview(solution: string): string {
+  const lines = solution
+    .split("\n")
+    .map((line) => line.trim())
+    .filter(Boolean)
+    // Prefer a human sentence instead of the start of a code fence.
+    .filter((line) => !line.startsWith("```"));
+
+  const first = lines[0] ?? solution.trim();
+  if (first.length <= 180) {
+    return first;
+  }
+  return `${first.slice(0, 180)}...`;
+}
+
+function formatSolutionStats(solution: RankedProblemSolution): string {
+  const parts: string[] = [
+    `${formatViews(solution.seenCount)} seen`,
+    `${solution.verificationCount} verified`,
+  ];
+
+  const total = solution.successCount + solution.failureCount;
+  if (total > 0) {
+    const rate = Math.round((solution.successCount / total) * 100);
+    parts.push(`${rate}% success`);
+  }
+
+  return parts.join(" · ");
+}
+
+function ProblemSearchResultsSection({
+  isVisible,
+  result,
+  trimmedQuery,
+  strict,
+}: {
+  isVisible: boolean;
+  result: ProblemSearchResponse | null;
+  trimmedQuery: string;
+  strict: boolean;
+}) {
+  if (!(isVisible && result)) {
+    return null;
+  }
+
+  const exact = strict ? result.exact : null;
+  const related = result.related;
+
+  let exactPanel: ReactNode | null = null;
+  if (strict) {
+    if (exact) {
+      exactPanel = (
+        <div className="rounded-lg border border-border/60 bg-card p-4">
+          <p className="font-medium text-sm">
+            {highlightMatches(exact.problem.canonicalProblem, trimmedQuery)}
+          </p>
+          {formatProblemContext(exact.problem) ? (
+            <p className="mt-1 line-clamp-1 text-muted-foreground/80 text-xs">
+              {formatProblemContext(exact.problem)}
+            </p>
+          ) : null}
+          {exact.solutions.length > 0 ? (
+            <div className="mt-3 grid grid-cols-1 gap-2">
+              {exact.solutions.map((solution) => (
+                <div
+                  className="rounded-md border border-border/60 bg-muted/10 px-3 py-2"
+                  key={solution.solutionHash}
+                >
+                  <p className="line-clamp-2 font-medium text-sm">
+                    {highlightMatches(
+                      extractSolutionPreview(solution.canonicalSolution),
+                      trimmedQuery
+                    )}
+                  </p>
+                  <p className="mt-1 text-muted-foreground text-xs">
+                    {formatSolutionStats(solution)}
+                  </p>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <p className="mt-3 text-muted-foreground text-sm">
+              No solutions have been linked to this problem yet.
+            </p>
+          )}
+        </div>
+      );
+    } else {
+      exactPanel = (
+        <div className="rounded-lg border border-border/60 bg-muted/10 px-4 py-3 text-sm">
+          <div className="font-semibold text-foreground">
+            No exact match found
+          </div>
+          <p className="mt-1 text-muted-foreground">
+            Showing the closest canonical problems below.
+          </p>
+        </div>
+      );
+    }
+  }
+
+  return (
+    <section className="flex flex-col gap-4 py-3 md:gap-5">
+      {strict ? (
+        <div className="flex items-center justify-between">
+          <h2 className="font-semibold text-lg">Exact match</h2>
+          <span className="text-muted-foreground text-xs">
+            {exact?.judge?.confidence != null
+              ? `Confidence ${(exact.judge.confidence * 100).toFixed(0)}%`
+              : "Strict match enabled"}
+          </span>
+        </div>
+      ) : null}
+
+      {exactPanel}
+
+      <div className="flex items-center justify-between">
+        <h2 className="font-semibold text-lg">
+          {strict ? "Similar problems" : "Results"}
+        </h2>
+        <span className="text-muted-foreground text-xs">
+          Showing {related.length} results
+        </span>
+      </div>
+
+      <div className="grid w-full grid-cols-1 gap-px overflow-hidden rounded-lg border border-border/60 bg-border/40">
+        {related.map((hit, index) => {
+          const topSolution = hit.solutions[0];
+          return (
+            <div
+              className={cn(
+                "flex items-start gap-3 bg-card px-4 py-3 transition-colors hover:bg-muted/60",
+                index === 0 && "rounded-t-lg",
+                index === related.length - 1 && "rounded-b-lg"
+              )}
+              key={hit.problem.id}
+            >
+              <div className="min-w-0 flex-1">
+                <p className="font-medium text-sm">
+                  {highlightMatches(hit.problem.canonicalProblem, trimmedQuery)}
+                </p>
+                {formatProblemContext(hit.problem) ? (
+                  <p className="line-clamp-1 text-muted-foreground/80 text-xs">
+                    {formatProblemContext(hit.problem)}
+                  </p>
+                ) : null}
+                {topSolution ? (
+                  <p className="mt-2 line-clamp-2 text-foreground/80 text-xs">
+                    Top:{" "}
+                    {highlightMatches(
+                      extractSolutionPreview(topSolution.canonicalSolution),
+                      trimmedQuery
+                    )}
+                  </p>
+                ) : null}
+              </div>
+              {topSolution ? (
+                <div className="ml-auto flex flex-col items-end gap-1 text-muted-foreground text-xs">
+                  <span className="font-mono tabular-nums">
+                    {formatViews(topSolution.seenCount)}
+                  </span>
+                  <span>seen</span>
+                </div>
+              ) : null}
+            </div>
+          );
+        })}
+      </div>
+    </section>
+  );
+}
+
+function SharesSearchView({ queryFromParams }: { queryFromParams: string }) {
   const {
     results,
     isSearching,
     searchError,
     hasInvalidCharacters,
     trimmedQuery,
-    retry: retrySearch,
+    retry,
   } = useShareSearchResults(queryFromParams);
 
   const hasQuery = trimmedQuery.length > 0;
@@ -483,13 +838,13 @@ export function ShareSearch() {
   });
 
   return (
-    <div className="flex w-full flex-col gap-6">
+    <>
       {showSanitizedHint ? (
         <p className="text-muted-foreground text-xs">
           Unsupported characters are ignored in results.
         </p>
       ) : null}
-      <ShareSearchErrorNotice error={searchError} onRetry={retrySearch} />
+      <ShareSearchErrorNotice error={searchError} onRetry={retry} />
       <ShareSearchEmptyState
         description={
           <>
@@ -517,6 +872,127 @@ export function ShareSearch() {
         results={results}
         trimmedQuery={trimmedQuery}
       />
+    </>
+  );
+}
+
+function ProblemsSearchView({ queryFromParams }: { queryFromParams: string }) {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const strictParam = searchParams.get("strict");
+  const strict = strictParam === "1" || strictParam === "true";
+
+  const { result, isSearching, searchError, trimmedQuery, retry } =
+    useProblemSearchResults(queryFromParams, { strict });
+
+  const resultsLength = (result?.related.length ?? 0) + (result?.exact ? 1 : 0);
+  const hasQuery = trimmedQuery.length > 0;
+  const hasRawQuery = queryFromParams.trim().length > 0;
+
+  const displayState = computeDisplayState({
+    hasRawQuery,
+    hasQuery,
+    isSearching,
+    resultsLength,
+    searchError,
+  });
+
+  function enableStrictMatch() {
+    const params = new URLSearchParams(searchParams.toString());
+    params.set("strict", "1");
+
+    const queryString = params.toString();
+    const target = queryString ? `/search?${queryString}` : "/search";
+    router.replace(target, { scroll: false });
+  }
+
+  function disableStrictMatch() {
+    const params = new URLSearchParams(searchParams.toString());
+    params.delete("strict");
+
+    const queryString = params.toString();
+    const target = queryString ? `/search?${queryString}` : "/search";
+    router.replace(target, { scroll: false });
+  }
+
+  return (
+    <>
+      {hasQuery ? (
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <div className="text-muted-foreground text-xs">
+            Strict match runs an LLM judge once for this query.
+          </div>
+          <button
+            className={cn(
+              "inline-flex h-8 items-center justify-center rounded-full border border-border/70 bg-card px-3 text-foreground text-sm shadow-sm transition-colors hover:bg-muted/50",
+              strict && "bg-foreground text-background hover:brightness-95"
+            )}
+            onClick={strict ? disableStrictMatch : enableStrictMatch}
+            type="button"
+          >
+            {strict ? "Strict match enabled" : "Check exact match"}
+          </button>
+        </div>
+      ) : null}
+
+      <ShareSearchErrorNotice error={searchError} onRetry={retry} />
+      <ShareSearchEmptyState
+        description={
+          <>
+            Describe the problem you solved or paste the error message
+            <br />
+            to find the exact canonical problem.
+          </>
+        }
+        isVisible={displayState.showBeginState}
+        title="Search canonical problems"
+      />
+      <ShareSearchEmptyState
+        description="Try including the exact error message or more context."
+        isVisible={displayState.showNoResultsState}
+        title="No results found"
+      />
+      <ShareSearchSkeleton isVisible={displayState.showResultsSkeleton} />
+      <ProblemSearchResultsSection
+        isVisible={displayState.showResults}
+        result={result}
+        strict={strict}
+        trimmedQuery={trimmedQuery}
+      />
+    </>
+  );
+}
+
+export function ShareSearch() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const queryFromParams = searchParams.get("q") ?? "";
+  const modeParam = searchParams.get("mode");
+  const mode: SearchMode = modeParam === "problems" ? "problems" : "shares";
+
+  function updateMode(nextMode: SearchMode) {
+    const params = new URLSearchParams(searchParams.toString());
+
+    if (nextMode === "shares") {
+      params.delete("mode");
+      params.delete("strict");
+    } else {
+      params.set("mode", "problems");
+    }
+
+    const queryString = params.toString();
+    const target = queryString ? `/search?${queryString}` : "/search";
+    router.replace(target, { scroll: false });
+  }
+
+  return (
+    <div className="flex w-full flex-col gap-6">
+      <SearchModeToggle mode={mode} onChange={updateMode} />
+      {mode === "shares" ? (
+        <SharesSearchView queryFromParams={queryFromParams} />
+      ) : (
+        <ProblemsSearchView queryFromParams={queryFromParams} />
+      )}
     </div>
   );
 }

@@ -70,14 +70,31 @@ export function ShareSearchInput() {
   function updateQuery(nextValue: string) {
     setQuery(nextValue);
     const trimmed = nextValue.trim();
-    const target = trimmed
-      ? `/search?q=${encodeURIComponent(trimmed)}`
-      : "/search";
+    const params = new URLSearchParams(
+      isSearchRoute ? searchParams.toString() : ""
+    );
+    const previousQuery = isSearchRoute ? queryFromParams : "";
+
+    if (trimmed) {
+      params.set("q", trimmed);
+    } else {
+      params.delete("q");
+    }
+
+    // If the query changes, clear any strict-match request flags so we don't
+    // accidentally re-run expensive checks while typing.
+    if (trimmed !== previousQuery) {
+      params.delete("strict");
+    }
+
+    const queryString = params.toString();
+    const target = queryString ? `/search?${queryString}` : "/search";
 
     let currentTarget: string;
     if (pathname?.startsWith("/search")) {
-      currentTarget = queryFromParams
-        ? `/search?q=${encodeURIComponent(queryFromParams)}`
+      const currentQueryString = searchParams.toString();
+      currentTarget = currentQueryString
+        ? `/search?${currentQueryString}`
         : "/search";
     } else {
       currentTarget = pathname ?? "/";

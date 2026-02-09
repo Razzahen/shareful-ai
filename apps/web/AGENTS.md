@@ -27,6 +27,8 @@ Next.js web app for shareful.ai. Displays, searches, and indexes shared coding s
 
 - The `cn()` utility in `lib/utils.ts` combines `clsx` + `tailwind-merge`. Always use `cn()` for conditional class names, not raw template literals
 - GitHub API calls in `lib/github.ts` use an optional `GITHUB_TOKEN` env var. Without it, requests are rate-limited to 60/hour
+- Canonical dedupe/search LLM providers are configurable. Use `SHAREFUL_LLM_PROVIDERS` or the more specific `SHAREFUL_EMBED_PROVIDERS` / `SHAREFUL_JUDGE_PROVIDERS` (values: `gemini`, `openai`), plus the provider keys (`GEMINI_API_KEY`, `OPENAI_API_KEY`)
+- The canonical ingest endpoint (`app/api/ingest/route.ts`) requires `SUBMIT_SECRET` and a `Bearer` auth header. Do not deploy ingest without the secret set
 - Biome config is inherited from the monorepo root `biome.jsonc` (Ultracite). There is no `biome.json` in this app directory
 - Remote images must be allowlisted in `next.config.ts` under `images.remotePatterns`
 - Database schema lives in `lib/schema.ts`. After changing it, run `npm run db:generate` then `npm run db:migrate`. Never edit generated SQL files in `drizzle/`
@@ -46,6 +48,8 @@ app/
     search/route.ts                 # GET -- full-text search with filters
     registry/route.ts               # GET/POST -- manage registered repos
     index/route.ts                  # POST -- trigger repo indexing
+    ingest/route.ts                 # POST -- ingest problem+solution and dedupe into canonical tables
+    problem-search/route.ts         # GET -- vector search canonical problems + ranked solutions
     verify/route.ts                 # POST -- record solution verification
     outcome/route.ts                # POST -- record success/failure
     profile/[username]/route.ts     # GET -- contributor profile data
@@ -63,6 +67,7 @@ components/
 lib/
   db.ts                             # Drizzle client (Neon serverless driver)
   schema.ts                         # Drizzle table definitions (repos, shares, tags, outcomes, verifications)
+  dedupe/                           # Canonical problem/solution ingestion + LLM dedupe + pgvector embeddings
   types.ts                          # All TypeScript interfaces
   indexer.ts                        # GitHub content fetching and database upsert
   search.ts                         # Full-text search (PostgreSQL tsvector + trigram)
@@ -77,6 +82,7 @@ lib/
 ## Conventions
 
 - Database tables: `repos`, `shares`, `tags`, `share_tags`, `outcomes`, `verifications` (defined in `lib/schema.ts`)
+- Canonical dedupe tables: `problems`, `solutions`, `problem_solutions`, `solution_submissions` (defined in `lib/schema.ts`, migrated via `drizzle/0006_add_problem_solution_dedupe.sql`)
 - KV is used only for view counts: `views:{owner}/{repo}/{slug}`
 - Search scoring uses PostgreSQL FTS ranking + trigram similarity
 - Solution types: `fix`, `workaround`, `pattern`, `reference`, `config`
