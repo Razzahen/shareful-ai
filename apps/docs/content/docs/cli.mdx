@@ -1,0 +1,197 @@
+---
+title: CLI reference
+description: Complete reference for all shareful-ai CLI commands, flags, and options.
+---
+
+The `shareful-ai` CLI runs directly with `npx`. No global installation is required.
+
+```bash
+npx shareful-ai <command> [options]
+```
+
+## Commands
+
+### `init`
+
+Create a new shares repository with the required directory structure.
+
+```bash
+npx shareful-ai init [name]
+```
+
+**Arguments:**
+
+| Argument | Description |
+| --- | --- |
+| `name` | Directory name for the repository (optional, defaults to current directory) |
+
+**What it creates:**
+
+- A `shares/` directory for your `SHARE.md` files
+- A `shareful.json` manifest file
+- A `.gitignore` file
+
+**Example:**
+
+```bash
+npx shareful-ai init my-solutions
+cd my-solutions
+```
+
+---
+
+### `create`
+
+Create a new `SHARE.md` file. Runs interactively when called without flags, or accepts flags for non-interactive use.
+
+```bash
+npx shareful-ai create [options]
+```
+
+**Aliases:** `new`
+
+**Options:**
+
+| Flag | Description |
+| --- | --- |
+| `-t, --title <title>` | Share title (max 128 characters) |
+| `-p, --problem <problem>` | One-sentence problem description (max 256 characters) |
+| `--tags <tags>` | Comma-separated tags (1-10 tags, max 32 characters each) |
+| `--type <type>` | Solution type: `fix`, `workaround`, `pattern`, `reference`, or `config` |
+
+**Interactive mode:**
+
+```bash
+npx shareful-ai create
+```
+
+The CLI walks you through each field with prompts and validation.
+
+**Non-interactive mode:**
+
+```bash
+npx shareful-ai create \
+  --title "Fix Prisma connection pool exhaustion" \
+  --problem "Prisma exhausts connection pool under high concurrency" \
+  --tags "prisma,database,performance" \
+  --type fix
+```
+
+**Output:**
+
+Creates a `shares/<slug>/SHARE.md` file with YAML frontmatter and section templates ready to fill in.
+
+---
+
+### `publish`
+
+Validate all shares, commit changes, push to GitHub, and notify the Shareful indexer.
+
+```bash
+npx shareful-ai publish
+```
+
+**Aliases:** `push`
+
+**What it does:**
+
+1. Scans the `shares/` directory for `SHARE.md` files
+2. Validates each share against the [format specification](/docs/share-format)
+3. Updates the `shareful.json` manifest
+4. Runs `git add`, `git commit`, and `git push`
+5. Sends the manifest to the Shareful indexer at `https://shareful.ai/api/index`
+
+**Requirements:**
+
+- Must be run from within a Git repository
+- Repository must have a configured remote
+
+---
+
+### `list`
+
+List all shares in the current repository.
+
+```bash
+npx shareful-ai list
+```
+
+**Aliases:** `ls`
+
+**Output:**
+
+Displays each share's title, solution type, tags, and file path.
+
+---
+
+### `find`
+
+Search shareful.ai for community solutions.
+
+```bash
+npx shareful-ai find <query> [options]
+```
+
+**Arguments:**
+
+| Argument | Description |
+| --- | --- |
+| `query` | Search query string |
+
+**Options:**
+
+| Flag | Description |
+| --- | --- |
+| `--type <type>` | Filter by solution type |
+| `--tags <tags>` | Filter by tags |
+| `--limit <n>` | Maximum number of results |
+
+**Examples:**
+
+```bash
+# Search for React hydration fixes
+npx shareful-ai find "hydration mismatch"
+
+# Search for authentication patterns
+npx shareful-ai find "auth" --type pattern
+
+# Search with tag filter
+npx shareful-ai find "database" --tags prisma,postgres --limit 5
+```
+
+---
+
+### `help`
+
+Display help information.
+
+```bash
+npx shareful-ai help
+npx shareful-ai --help
+```
+
+### `version`
+
+Display the current version.
+
+```bash
+npx shareful-ai --version
+```
+
+## Telemetry
+
+The CLI collects anonymous telemetry to improve the platform. Events tracked include `create`, `publish`, `init`, and `find` actions with aggregate metadata (no personal information).
+
+To opt out, set either environment variable:
+
+```bash
+export DISABLE_TELEMETRY=1
+# or
+export DO_NOT_TRACK=1
+```
+
+## Next steps
+
+- Learn the [share format](/docs/share-format) specification
+- Follow the [creating shares](/docs/creating-shares) guide
+- Read about [configuration](/docs/configuration) options

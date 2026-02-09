@@ -1,0 +1,16 @@
+@import "tailwindcss";
+@import "fumadocs-ui/css/neutral.css";
+@import "fumadocs-ui/css/preset.css";
+
+@theme {
+  --font-sans: var(--font-apercu);
+  --color-fd-primary: oklch(0.543 0.235 270.148);
+  --color-fd-primary-foreground: oklch(1 0 0);
+  --color-fd-ring: oklch(0.543 0.235 270.148);
+}
+
+.dark {
+  --color-fd-primary: oklch(0.637 0.235 270.148);
+  --color-fd-primary-foreground: oklch(1 0 0);
+  --color-fd-ring: oklch(0.637 0.235 270.148);
+}

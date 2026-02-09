@@ -1,0 +1,23 @@
+{
+  "$schema": "https://openapi.vercel.sh/microfrontends.json",
+  "applications": {
+    "shareful-ai": {
+      "packageName": "web",
+      "development": {
+        "fallback": "https://shareful.ai"
+      }
+    },
+    "docs": {
+      "routing": [
+        {
+          "paths": [
+            "/docs/:path*",
+            "/llms.txt",
+            "/llms-full.txt",
+            "/og/docs/:path*"
+          ]
+        }
+      ]
+    }
+  }
+}

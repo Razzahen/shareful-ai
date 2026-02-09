@@ -1,0 +1,13 @@
+{
+  "title": "Documentation",
+  "pages": [
+    "index",
+    "cli",
+    "share-format",
+    "creating-shares",
+    "publishing",
+    "finding-shares",
+    "configuration",
+    "faq"
+  ]
+}

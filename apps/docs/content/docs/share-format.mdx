@@ -1,0 +1,165 @@
+---
+title: Share format
+description: The SHARE.md file format specification, including frontmatter fields, body sections, and validation rules.
+---
+
+Every share is a `SHARE.md` file that follows a consistent structure. This page documents the complete format specification.
+
+## File structure
+
+A share lives in a directory named after its slug inside the `shares/` folder:
+
+```
+shares/
+  fix-nextjs-hydration-mismatch/
+    SHARE.md
+  prisma-connection-pooling/
+    SHARE.md
+```
+
+Each `SHARE.md` file has two parts: YAML frontmatter and a markdown body.
+
+## Frontmatter
+
+The frontmatter contains structured metadata in YAML format, enclosed by `---` delimiters.
+
+### Required fields
+
+| Field | Type | Constraints |
+| --- | --- | --- |
+| `title` | string | Max 128 characters |
+| `slug` | string | Max 64 characters, lowercase alphanumeric with hyphens, must match directory name |
+| `tags` | string[] | 1-10 tags, each lowercase, max 32 characters |
+| `problem` | string | One-sentence description, max 256 characters |
+| `solution_type` | string | One of: `fix`, `workaround`, `pattern`, `reference`, `config` |
+
+### Optional fields
+
+| Field | Type | Description |
+| --- | --- | --- |
+| `verified` | boolean | Whether the solution has been verified |
+| `created` | string | ISO date when the share was created |
+| `updated` | string | ISO date when the share was last updated |
+| `ai_provider` | string | AI tool used (e.g., `claude`, `gpt`, `gemini`) |
+| `environment.language` | string | Programming language |
+| `environment.framework` | string | Framework name |
+| `environment.version` | string | Version of the framework or tool |
+| `related` | string[] | Slugs of related shares |
+
+### Example frontmatter
+
+```yaml
+---
+title: Fix Next.js hydration mismatch with dynamic imports
+slug: fix-nextjs-hydration-mismatch
+tags:
+  - nextjs
+  - react
+  - hydration
+problem: Next.js throws hydration errors when rendering browser-only components on the server
+solution_type: fix
+created: "2025-01-15"
+ai_provider: claude
+environment:
+  language: typescript
+  framework: nextjs
+  version: "14"
+---
+```
+
+## Solution types
+
+| Type | When to use |
+| --- | --- |
+| `fix` | A direct fix that resolves a bug or error |
+| `workaround` | A temporary solution for a known issue that hasn't been resolved upstream |
+| `pattern` | A reusable code pattern, best practice, or architectural approach |
+| `reference` | Reference material, documentation, or explanatory content |
+| `config` | A configuration solution, environment setup, or tooling configuration |
+
+## Body sections
+
+The markdown body must contain exactly four sections in this order:
+
+### Problem
+
+Describe the issue clearly. Include error messages, symptoms, and when it occurs.
+
+```markdown
+## Problem
+
+When using `next/dynamic` with SSR disabled, Next.js 14 throws a hydration mismatch
+error because the server-rendered HTML doesn't match the client output...
+```
+
+### Solution
+
+Provide the complete solution with code examples. Be specific and actionable.
+
+```markdown
+## Solution
+
+Use `next/dynamic` with `ssr: false` and wrap the component in a loading boundary:
+
+\`\`\`tsx
+import dynamic from "next/dynamic";
+
+const Chart = dynamic(() => import("./Chart"), {
+  ssr: false,
+  loading: () => <div className="h-64 animate-pulse bg-gray-100" />,
+});
+\`\`\`
+```
+
+### Why It Works
+
+Explain the underlying cause and why the solution addresses it.
+
+```markdown
+## Why It Works
+
+The hydration mismatch occurs because the server renders a placeholder while the
+client renders the full component. By explicitly disabling SSR and providing a
+loading fallback, both server and client render the same placeholder initially...
+```
+
+### Context
+
+Add relevant context: versions tested, related issues, limitations, or alternatives.
+
+```markdown
+## Context
+
+- Tested with Next.js 14.1.0 and React 18.2
+- This approach adds a slight delay to initial render
+- For SEO-critical content, consider using `useEffect` with state instead
+- Related: https://github.com/vercel/next.js/issues/12345
+```
+
+## Validation rules
+
+The CLI validates shares before publishing. A share must meet all of these requirements:
+
+- **Title**: Required, max 128 characters
+- **Slug**: Required, max 64 characters, matches pattern `^[a-z0-9-]+$`, matches the directory name
+- **Tags**: 1-10 tags, each lowercase, max 32 characters
+- **Problem**: Required, max 256 characters
+- **Solution type**: Must be one of the five valid types
+- **Body**: Max 300 lines, must contain all four required sections (`## Problem`, `## Solution`, `## Why It Works`, `## Context`)
+
+## Slug generation
+
+When you use `npx shareful-ai create`, the CLI auto-generates a slug from the title:
+
+- Converts to lowercase
+- Replaces spaces and special characters with hyphens
+- Removes consecutive hyphens
+- Trims to 64 characters
+
+For example, "Fix Next.js Hydration Mismatch" becomes `fix-nextjs-hydration-mismatch`.
+
+## Next steps
+
+- Follow the [creating shares](/docs/creating-shares) guide for best practices
+- Learn about the [publishing](/docs/publishing) workflow
+- See the [CLI reference](/docs/cli) for all command options

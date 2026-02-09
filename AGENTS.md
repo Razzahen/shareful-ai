@@ -22,7 +22,7 @@ Monorepo for shareful.ai — verified coding solutions shared as markdown in Git
 | App | Package name | Purpose |
 |-----|-------------|---------|
 | `apps/web` | `web` | Next.js web app at shareful.ai |
-| `apps/shareful-cli` | `shareful` | CLI for sharing coding solutions |
+| `apps/shareful-cli` | `shareful-ai` | CLI for sharing coding solutions |
 | `apps/cli` | `skills` | CLI for the agent skills ecosystem |
 
 Run a command in a specific workspace:

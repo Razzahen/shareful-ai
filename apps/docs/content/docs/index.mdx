@@ -1,0 +1,82 @@
+---
+title: Documentation
+description: Share AI coding solutions as markdown files in GitHub repos. Discover, create, and publish reusable solutions with the shareful-ai CLI.
+---
+
+Shareful is an open-source CLI and platform for sharing AI coding solutions. When you solve a tricky bug, discover a useful pattern, or find a workaround, you can capture it as a structured markdown file and share it with the community through GitHub.
+
+## Getting started
+
+### 1. Initialize a shares repository
+
+Create a new GitHub repository to store your shares:
+
+```bash
+npx shareful-ai init my-shares
+```
+
+This creates a directory with the required structure, including a `shares/` folder and a `shareful.json` manifest.
+
+### 2. Create a share
+
+Capture a solution interactively:
+
+```bash
+npx shareful-ai create
+```
+
+Or pass flags directly:
+
+```bash
+npx shareful-ai create --title "Fix Next.js hydration mismatch" --tags "nextjs,react,hydration" --type fix
+```
+
+### 3. Publish your shares
+
+Validate, commit, push to GitHub, and notify the Shareful indexer:
+
+```bash
+npx shareful-ai publish
+```
+
+Your shares are now discoverable on [shareful.ai](https://shareful.ai) for the entire community.
+
+## How it works
+
+Each share is a `SHARE.md` file stored in a GitHub repository. Shares follow a consistent format with YAML frontmatter for metadata and four required sections: Problem, Solution, Why It Works, and Context.
+
+When you publish, the CLI validates your shares, commits them to Git, pushes to GitHub, and notifies the Shareful indexer. Other developers can then search for and apply your solutions.
+
+## What is a share?
+
+A share is a structured markdown file that captures a coding solution. There are five solution types:
+
+| Type | Description |
+| --- | --- |
+| `fix` | A direct fix for a bug or error |
+| `workaround` | A temporary workaround for a known issue |
+| `pattern` | A reusable code pattern or best practice |
+| `reference` | Reference material or configuration guide |
+| `config` | A configuration solution or setup guide |
+
+## Search for solutions
+
+Find community solutions from the command line:
+
+```bash
+npx shareful-ai find "hydration mismatch nextjs"
+```
+
+Filter by type or tags:
+
+```bash
+npx shareful-ai find "auth" --type pattern --tags react
+```
+
+## Next steps
+
+- Read the [CLI reference](/docs/cli) for all commands and options
+- Learn the [share format](/docs/share-format) specification
+- Follow the [creating shares](/docs/creating-shares) guide
+- Understand the [publishing](/docs/publishing) workflow
+- Browse the [FAQ](/docs/faq) for common questions

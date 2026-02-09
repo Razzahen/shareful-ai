@@ -25,7 +25,7 @@ The web app runs at [http://localhost:3000](http://localhost:3000).
 
 ```
 apps/
-  shareful-cli/    # shareful CLI — share AI coding solutions as markdown (npm: shareful)
+  shareful-cli/    # shareful CLI — share AI coding solutions as markdown (npm: shareful-ai)
   web/             # Next.js web app for shareful.ai
 skills/            # Bundled agent skills (find-shares)
 starter-shares/    # Seed content — 22 SHARE.md files for bootstrapping

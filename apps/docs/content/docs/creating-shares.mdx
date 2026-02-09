@@ -1,0 +1,138 @@
+---
+title: Creating shares
+description: How to create high-quality shares using the CLI, including interactive mode, CLI flags, and writing tips.
+---
+
+This guide walks through creating shares from start to finish, including the interactive workflow, CLI flags for automation, and tips for writing useful content.
+
+## Quick start
+
+Run the create command from inside a shares repository:
+
+```bash
+npx shareful-ai create
+```
+
+The CLI prompts you for each required field:
+
+1. **Title** — A clear, specific title for your solution
+2. **Problem** — A one-sentence description of the issue
+3. **Solution type** — Choose from `fix`, `workaround`, `pattern`, `reference`, or `config`
+4. **Tags** — Relevant keywords for discoverability
+
+After completing the prompts, the CLI generates a `SHARE.md` file in `shares/<slug>/SHARE.md` with your frontmatter pre-filled and section templates ready to complete.
+
+## Using CLI flags
+
+Skip the interactive prompts by passing flags directly:
+
+```bash
+npx shareful-ai create \
+  --title "Fix ESLint flat config migration" \
+  --problem "ESLint 9 flat config breaks existing plugin configurations" \
+  --tags "eslint,config,migration" \
+  --type fix
+```
+
+This is useful for scripting or when you already know the metadata.
+
+## Writing the body
+
+After the CLI generates the file, open it and fill in the four required sections.
+
+### Problem section
+
+Describe what goes wrong. Include error messages, stack traces, or symptoms that help others recognize they have the same issue.
+
+```markdown
+## Problem
+
+After upgrading to ESLint 9, the flat config format (`eslint.config.js`) doesn't
+load plugins the same way as `.eslintrc`. Running `eslint .` throws:
+
+```
+Error: Key "rules": Key "react/jsx-no-target-blank": Could not find plugin "react".
+```
+
+This happens because flat config requires explicit plugin imports instead of
+string-based plugin names.
+```
+
+### Solution section
+
+Provide the complete, actionable fix. Include full code examples that someone can copy and apply.
+
+```markdown
+## Solution
+
+Migrate from string-based plugin references to explicit imports in `eslint.config.js`:
+
+\`\`\`js
+import reactPlugin from "eslint-plugin-react";
+
+export default [
+  {
+    plugins: {
+      react: reactPlugin,
+    },
+    rules: {
+      "react/jsx-no-target-blank": "error",
+    },
+  },
+];
+\`\`\`
+```
+
+### Why It Works section
+
+Explain the root cause and why your solution addresses it. This helps readers understand the problem deeply, not just apply a fix blindly.
+
+```markdown
+## Why It Works
+
+ESLint 9's flat config dropped the automatic plugin resolution that `.eslintrc`
+provided. In the old format, `"plugins": ["react"]` told ESLint to find and load
+`eslint-plugin-react` automatically. Flat config requires explicit JavaScript
+imports, giving you full control over plugin versions and resolution.
+```
+
+### Context section
+
+Add versions, limitations, alternatives, and related resources.
+
+```markdown
+## Context
+
+- Tested with ESLint 9.0.0 and eslint-plugin-react 7.34.0
+- The ESLint migration guide covers this at https://eslint.org/docs/latest/use/configure/migration-guide
+- Some plugins don't yet support flat config — check each plugin's changelog
+- For TypeScript projects, also update typescript-eslint to v7+
+```
+
+## Choosing the right solution type
+
+| Type | Use when... |
+| --- | --- |
+| `fix` | You found a direct solution to a bug or error |
+| `workaround` | The upstream issue exists but you found a way around it |
+| `pattern` | You're sharing a reusable approach or best practice |
+| `reference` | You're documenting configuration, setup, or reference material |
+| `config` | The solution is primarily about configuration files or environment setup |
+
+## Writing tips
+
+**Be specific.** "Fix React error" is too vague. "Fix React hydration mismatch when using browser-only libraries with Next.js 14" tells readers exactly what this solves.
+
+**Include complete code.** Partial snippets frustrate readers. Show the full file or function, not just the changed line.
+
+**Add error messages.** People search for error messages verbatim. Including the exact error text makes your share more discoverable.
+
+**Keep it focused.** One share solves one problem. If you have multiple solutions, create multiple shares.
+
+**Tag thoughtfully.** Use specific, lowercase tags. Prefer `nextjs` over `next` and `typescript` over `ts`. Include the framework, language, and key libraries involved.
+
+## Next steps
+
+- Review the [share format](/docs/share-format) specification for validation rules
+- Learn how to [publish](/docs/publishing) your shares
+- See the [CLI reference](/docs/cli) for all command options

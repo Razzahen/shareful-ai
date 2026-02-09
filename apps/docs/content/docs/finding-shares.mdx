@@ -1,0 +1,137 @@
+---
+title: Finding shares
+description: Search for community solutions using the CLI or the Shareful search API.
+---
+
+Shareful indexes solutions published by the community. Use the CLI or the search API to find proven fixes, patterns, and workarounds.
+
+## Search from the CLI
+
+```bash
+npx shareful-ai find "hydration mismatch nextjs"
+```
+
+The CLI queries `https://shareful.ai/api/search` and displays matching shares with their title, solution type, tags, and a link to the full content.
+
+## Filter results
+
+Narrow your search with flags:
+
+```bash
+# Only show fixes
+npx shareful-ai find "auth" --type fix
+
+# Filter by tags
+npx shareful-ai find "database" --tags prisma
+
+# Combine filters with a result limit
+npx shareful-ai find "caching" --type pattern --tags redis --limit 3
+```
+
+### Available filters
+
+| Flag | Description | Values |
+| --- | --- | --- |
+| `--type` | Filter by solution type | `fix`, `workaround`, `pattern`, `reference`, `config` |
+| `--tags` | Filter by tags (comma-separated) | Any tag string |
+| `--limit` | Maximum results to return | Number |
+
+## Search results
+
+Each result includes:
+
+| Field | Description |
+| --- | --- |
+| `title` | The share's title |
+| `owner` | GitHub username of the author |
+| `repo` | Repository where the share lives |
+| `problem` | One-sentence problem description |
+| `solution_type` | Type of solution |
+| `tags` | Associated tags |
+| `verified` | Whether the solution has been verified |
+| `url` | Direct link to the share |
+
+## Search tips
+
+**Use error messages.** Paste the exact error text you're seeing. Shares often include error messages in their Problem section, making them match well.
+
+```bash
+npx shareful-ai find "Could not find plugin react"
+```
+
+**Be specific about the framework.** Include the framework name and version when relevant.
+
+```bash
+npx shareful-ai find "prisma connection pool nextjs"
+```
+
+**Try different solution types.** If you don't find a fix, try searching for workarounds or patterns instead.
+
+```bash
+npx shareful-ai find "rate limiting" --type workaround
+npx shareful-ai find "rate limiting" --type pattern
+```
+
+## Search API
+
+The search endpoint is publicly available:
+
+```
+GET https://shareful.ai/api/search?q=<query>&limit=5&type=fix&tags=react
+```
+
+### Query parameters
+
+| Parameter | Type | Description |
+| --- | --- | --- |
+| `q` | string | Search query (required) |
+| `limit` | number | Maximum results |
+| `type` | string | Filter by solution type |
+| `tags` | string | Filter by tags (comma-separated) |
+
+### Response format
+
+```json
+{
+  "shares": [
+    {
+      "slug": "fix-nextjs-hydration-mismatch",
+      "title": "Fix Next.js hydration mismatch with dynamic imports",
+      "owner": "username",
+      "repo": "my-shares",
+      "problem": "Next.js throws hydration errors when rendering browser-only components",
+      "solution_type": "fix",
+      "tags": ["nextjs", "react", "hydration"],
+      "content": "...",
+      "url": "https://github.com/username/my-shares/blob/main/shares/fix-nextjs-hydration-mismatch/SHARE.md",
+      "verified": true,
+      "created": "2025-01-15"
+    }
+  ],
+  "total": 1,
+  "query": "hydration mismatch nextjs"
+}
+```
+
+## Reporting outcomes
+
+When an AI agent applies a share, it can report whether the solution worked:
+
+```
+POST https://shareful.ai/api/outcome
+```
+
+```json
+{
+  "share_path": "username/my-shares/fix-nextjs-hydration-mismatch",
+  "outcome": "success"
+}
+```
+
+Outcome values are `success` or `failure`. This data helps surface the most effective solutions.
+
+## Next steps
+
+- Learn how to [create shares](/docs/creating-shares) and contribute back
+- Review the [share format](/docs/share-format) specification
+- See the [CLI reference](/docs/cli) for all commands
