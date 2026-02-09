@@ -42,7 +42,7 @@ export function LLMCopyButton({
             const content = await res.text();
             cache.set(markdownUrl, content);
 
-            return content;
+            return new Blob([content], { type: "text/plain" });
           }),
         }),
       ]);
