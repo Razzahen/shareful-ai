@@ -1,5 +1,11 @@
 # shareful-ai
 
+## 0.1.4
+
+### Patch Changes
+
+- 0084a9e: improve packages
+
 ## 0.1.3
 
 ### Patch Changes
