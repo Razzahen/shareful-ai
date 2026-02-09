@@ -3,11 +3,9 @@
   "changelog": "@changesets/cli/changelog",
   "commit": false,
   "fixed": [],
-  "linked": [
-    ["beautiful-qr-code", "@beautiful-qr-code/react", "@beautiful-qr-code/cli"]
-  ],
+  "linked": [],
   "access": "public",
   "baseBranch": "main",
   "updateInternalDependencies": "patch",
-  "ignore": ["@beautiful-qr-code/web"]
+  "ignore": ["web", "docs"]
 }

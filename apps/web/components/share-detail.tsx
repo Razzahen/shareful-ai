@@ -1,17 +1,12 @@
+import { format, parseISO } from "date-fns";
 import { CheckCircle, ExternalLink, Eye, TrendingUp } from "lucide-react";
-import ReactMarkdown from "react-markdown";
-import rehypeHighlight from "rehype-highlight";
-import rehypeSanitize, { defaultSchema } from "rehype-sanitize";
-import remarkGfm from "remark-gfm";
+import { MarkdownRenderer } from "@/components/markdown-renderer";
 import { SolutionTypeBadge } from "@/components/solution-type-badge";
 import { TagBadge } from "@/components/tag-badge";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import type { ShareWithStats } from "@/lib/types";
-
-const LANGUAGE_CLASS_RE = /^language-./;
-const HLJS_CLASS_RE = /^hljs-./;
 
 export function ShareDetail({ share }: { share: ShareWithStats }) {
   const successPercent =
@@ -65,33 +60,7 @@ export function ShareDetail({ share }: { share: ShareWithStats }) {
       <Separator />
 
       {/* Content */}
-      <article className="prose prose-neutral dark:prose-invert max-w-none">
-        <ReactMarkdown
-          rehypePlugins={[
-            rehypeHighlight,
-            [
-              rehypeSanitize,
-              {
-                ...defaultSchema,
-                attributes: {
-                  ...defaultSchema.attributes,
-                  code: [
-                    ...(defaultSchema.attributes?.code ?? []),
-                    ["className", LANGUAGE_CLASS_RE],
-                  ],
-                  span: [
-                    ...(defaultSchema.attributes?.span ?? []),
-                    ["className", HLJS_CLASS_RE],
-                  ],
-                },
-              },
-            ],
-          ]}
-          remarkPlugins={[remarkGfm]}
-        >
-          {share.content}
-        </ReactMarkdown>
-      </article>
+      <MarkdownRenderer content={share.content} />
 
       <Separator />
 
@@ -119,7 +88,7 @@ export function ShareDetail({ share }: { share: ShareWithStats }) {
           {share.created && (
             <div className="flex justify-between">
               <span className="text-muted-foreground">Created</span>
-              <span>{share.created}</span>
+              <span>{format(parseISO(share.created), "MMM d, yyyy")}</span>
             </div>
           )}
           {share.environment && (
