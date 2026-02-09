@@ -3,5 +3,32 @@
   "buildCommand": "cd apps/web && next build",
   "outputDirectory": "apps/web/.next",
   "installCommand": "npm install",
-  "framework": "nextjs"
+  "framework": "nextjs",
+  "rewrites": [
+    {
+      "source": "/docs",
+      "destination": "https://shareful-docs.vercel.app/docs"
+    },
+    {
+      "source": "/docs/:path*",
+      "destination": "https://shareful-docs.vercel.app/docs/:path*"
+    },
+    {
+      "source": "/llms.txt",
+      "destination": "https://shareful-docs.vercel.app/llms.txt"
+    },
+    {
+      "source": "/llms-full.txt",
+      "destination": "https://shareful-docs.vercel.app/llms-full.txt"
+    },
+    {
+      "source": "/og/docs/:path*",
+      "destination": "https://shareful-docs.vercel.app/og/docs/:path*"
+    }
+  ],
+  "crons": [
+    { "path": "/api/cron/process-jobs", "schedule": "* * * * *" },
+    { "path": "/api/cron/reindex", "schedule": "0 */6 * * *" },
+    { "path": "/api/cron/sync-upstreams", "schedule": "0 * * * *" }
+  ]
 }

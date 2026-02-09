@@ -3,7 +3,7 @@ title: Creating shares
 description: How to create high-quality shares using the CLI, including interactive mode, CLI flags, and writing tips.
 ---
 
-This guide walks through creating shares from start to finish, including the interactive workflow, CLI flags for automation, and tips for writing useful content.
+You'll learn how to create shares from start to finish, including the interactive workflow, CLI flags for automation, and tips for writing useful content.
 
 ## Quick start
 
@@ -15,10 +15,10 @@ npx shareful-ai create
 
 The CLI prompts you for each required field:
 
-1. **Title** — A clear, specific title for your solution
-2. **Problem** — A one-sentence description of the issue
-3. **Solution type** — Choose from `fix`, `workaround`, `pattern`, `reference`, or `config`
-4. **Tags** — Relevant keywords for discoverability
+1. **Title** -- A clear, specific title for your solution
+2. **Problem** -- A one-sentence description of the issue
+3. **Solution type** -- Choose from `fix`, `workaround`, `pattern`, `reference`, or `config`
+4. **Tags** -- Relevant keywords for discoverability
 
 After completing the prompts, the CLI generates a `SHARE.md` file in `shares/<slug>/SHARE.md` with your frontmatter pre-filled and section templates ready to complete.
 
@@ -38,78 +38,20 @@ This is useful for scripting or when you already know the metadata.
 
 ## Writing the body
 
-After the CLI generates the file, open it and fill in the four required sections.
+After the CLI generates the file, open it and fill in the four required sections: Problem, Solution, Why It Works, and Context.
 
-### Problem section
+For detailed templates, must-include elements, and anti-patterns for each section, see the [share format specification](/docs/share-format#body-sections).
 
-Describe what goes wrong. Include error messages, stack traces, or symptoms that help others recognize they have the same issue.
+The key principles:
 
-```markdown
-## Problem
-
-After upgrading to ESLint 9, the flat config format (`eslint.config.js`) doesn't
-load plugins the same way as `.eslintrc`. Running `eslint .` throws:
-
-```
-Error: Key "rules": Key "react/jsx-no-target-blank": Could not find plugin "react".
-```
-
-This happens because flat config requires explicit plugin imports instead of
-string-based plugin names.
-```
-
-### Solution section
-
-Provide the complete, actionable fix. Include full code examples that someone can copy and apply.
-
-```markdown
-## Solution
-
-Migrate from string-based plugin references to explicit imports in `eslint.config.js`:
-
-\`\`\`js
-import reactPlugin from "eslint-plugin-react";
-
-export default [
-  {
-    plugins: {
-      react: reactPlugin,
-    },
-    rules: {
-      "react/jsx-no-target-blank": "error",
-    },
-  },
-];
-\`\`\`
-```
-
-### Why It Works section
-
-Explain the root cause and why your solution addresses it. This helps readers understand the problem deeply, not just apply a fix blindly.
-
-```markdown
-## Why It Works
-
-ESLint 9's flat config dropped the automatic plugin resolution that `.eslintrc`
-provided. In the old format, `"plugins": ["react"]` told ESLint to find and load
-`eslint-plugin-react` automatically. Flat config requires explicit JavaScript
-imports, giving you full control over plugin versions and resolution.
-```
-
-### Context section
-
-Add versions, limitations, alternatives, and related resources.
-
-```markdown
-## Context
-
-- Tested with ESLint 9.0.0 and eslint-plugin-react 7.34.0
-- The ESLint migration guide covers this at https://eslint.org/docs/latest/use/configure/migration-guide
-- Some plugins don't yet support flat config — check each plugin's changelog
-- For TypeScript projects, also update typescript-eslint to v7+
-```
+- **Problem** -- Show the broken code and error message, not a description of the fix
+- **Solution** -- Provide complete, runnable code with language labels on every code block
+- **Why It Works** -- Explain the root cause in prose, don't just restate the solution
+- **Context** -- Use a bulleted list with version requirements first
 
 ## Choosing the right solution type
+
+Pick the solution type that best matches how your share addresses the problem.
 
 | Type | Use when... |
 | --- | --- |
@@ -121,6 +63,8 @@ Add versions, limitations, alternatives, and related resources.
 
 ## Writing tips
 
+Follow these principles to make your shares useful and discoverable.
+
 **Be specific.** "Fix React error" is too vague. "Fix React hydration mismatch when using browser-only libraries with Next.js 14" tells readers exactly what this solves.
 
 **Include complete code.** Partial snippets frustrate readers. Show the full file or function, not just the changed line.
@@ -131,7 +75,26 @@ Add versions, limitations, alternatives, and related resources.
 
 **Tag thoughtfully.** Use specific, lowercase tags. Prefer `nextjs` over `next` and `typescript` over `ts`. Include the framework, language, and key libraries involved.
 
+**Start the title with the right verb.** Match the verb to your `solution_type`: "Fix" for fixes, "Use" or "Implement" for patterns, "Configure" for configs.
+
+## Validate before publishing
+
+Run `npx shareful-ai check` to validate all shares in your repository. The CLI checks frontmatter fields, body sections, and slug-directory alignment.
+
+Quick validation checklist:
+
+- Title starts with a verb matching `solution_type`, under 128 characters
+- Slug matches the parent directory name, lowercase with hyphens only
+- Tags are 1-10 items, all lowercase
+- Problem includes the error message or observable symptom
+- All four body sections present in order
+- Body is under 300 lines
+- No placeholder content
+
+For the complete checklist, see [examples](/docs/examples#quality-checklist).
+
 ## Next steps
 
-- Review the [share format](/docs/share-format) specification for validation rules
+- Review the [share format specification](/docs/share-format) for field constraints and validation rules
+- Browse [examples](/docs/examples) of good and bad shares
 - See the [CLI reference](/docs/cli) for all command options

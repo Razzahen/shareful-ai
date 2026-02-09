@@ -1,9 +1,9 @@
 ---
-title: Share format
-description: The SHARE.md file format specification, including frontmatter fields, body sections, and validation rules.
+title: Share format specification
+description: The complete SHARE.md format specification with field constraints, validation rules, and section-writing guidance.
 ---
 
-Every share is a `SHARE.md` file that follows a consistent structure. This page documents the complete format specification.
+This page defines the complete `SHARE.md` format. Use it as a reference when writing or validating shares.
 
 ## File structure
 
@@ -17,124 +17,388 @@ shares/
     SHARE.md
 ```
 
-Each `SHARE.md` file has two parts: YAML frontmatter and a markdown body.
+Each `SHARE.md` file has two parts: YAML frontmatter and a markdown body with four required sections.
 
-## Frontmatter
+## Required frontmatter fields
 
 The frontmatter contains structured metadata in YAML format, enclosed by `---` delimiters.
 
-### Required fields
+### `title`
 
-| Field | Type | Constraints |
+The title is the human-readable name for a share.
+
+| Constraint | Value |
+| --- | --- |
+| Type | string |
+| Max length | 128 characters |
+| Required | Yes |
+
+A human-readable title describing the solution. Start with a verb that matches the `solution_type`:
+
+| solution_type | Verb convention | Example |
 | --- | --- | --- |
-| `title` | string | Max 128 characters |
-| `slug` | string | Max 64 characters, lowercase alphanumeric with hyphens, must match directory name |
-| `tags` | string[] | 1-10 tags, each lowercase, max 32 characters |
-| `problem` | string | One-sentence description, max 256 characters |
-| `solution_type` | string | One of: `fix`, `workaround`, `pattern`, `reference`, `config` |
+| `fix` | "Fix ..." | "Fix Prisma N+1 query problem with includes and joins" |
+| `workaround` | "Workaround for ..." | "Workaround for Next.js 14 middleware redirect loop" |
+| `pattern` | "Use ...", "Implement ..." | "Use TypeScript satisfies operator for type-safe config objects" |
+| `reference` | "Guide to ...", "Reference for ..." | "Guide to PostgreSQL JSONB query operators" |
+| `config` | "Configure ..." | "Configure ESLint flat config for TypeScript monorepos" |
 
-### Optional fields
-
-| Field | Type | Description |
-| --- | --- | --- |
-| `verified` | boolean | Whether the solution has been verified |
-| `created` | string | ISO date when the share was created |
-| `updated` | string | ISO date when the share was last updated |
-| `ai_provider` | string | AI tool used (e.g., `claude`, `gpt`, `gemini`) |
-| `environment.language` | string | Programming language |
-| `environment.framework` | string | Framework name |
-| `environment.version` | string | Version of the framework or tool |
-| `related` | string[] | Slugs of related shares |
-
-### Example frontmatter
+Good titles:
 
 ```yaml
----
-title: Fix Next.js hydration mismatch with dynamic imports
-slug: fix-nextjs-hydration-mismatch
-tags:
-  - nextjs
-  - react
-  - hydration
-problem: Next.js throws hydration errors when rendering browser-only components on the server
-solution_type: fix
-created: "2025-01-15"
-ai_provider: claude
+title: "Fix Docker build cache invalidation for node_modules"
+title: "Fix Next.js hydration error with dynamic imports"
+title: "Use TypeScript satisfies operator for type-safe config objects"
+```
+
+Bad titles:
+
+```yaml
+title: "Fix bug"          # Too vague, no technology or symptom
+title: "TypeScript"        # Not a sentence, no verb, no problem
+title: "fix prisma"        # No capitalization, no specifics
+```
+
+### `slug`
+
+The slug is a kebab-case identifier used as the directory name and URL path.
+
+| Constraint | Value |
+| --- | --- |
+| Type | string |
+| Max length | 64 characters |
+| Pattern | `/^[a-z0-9-]+$/` |
+| Required | Yes |
+
+The slug must match the parent directory name exactly.
+
+The CLI generates slugs from titles automatically:
+
+1. Convert to lowercase
+2. Strip characters that are not `a-z`, `0-9`, spaces, or hyphens
+3. Replace spaces with hyphens
+4. Collapse consecutive hyphens into one
+5. Trim leading and trailing hyphens
+6. Truncate to 64 characters
+
+```
+"Fix Prisma N+1 queries"       → fix-prisma-n1-queries
+"Fix Docker build cache (v2)"  → fix-docker-build-cache-v2
+"Fix Next.js hydration error"  → fix-nextjs-hydration-error
+```
+
+Good slugs:
+
+```yaml
+slug: fix-prisma-n-plus-one-queries
+slug: fix-docker-node-modules-layer-cache
+```
+
+Bad slugs:
+
+```yaml
+slug: Fix-Prisma           # Uppercase letters not allowed
+slug: fix_prisma_queries    # Underscores not allowed
+slug: fix prisma            # Spaces not allowed
+slug: fix-prisma-n+1        # Special characters not allowed
+```
+
+### `tags`
+
+Tags are lowercase keywords that make shares discoverable through search.
+
+| Constraint | Value |
+| --- | --- |
+| Type | string[] |
+| Min items | 1 |
+| Max items | 10 |
+| Each max length | 32 characters |
+| Case | Lowercase only |
+| Required | Yes |
+
+Tags make shares discoverable. Cover three categories:
+
+1. **Primary technology** -- the main language, framework, or tool (`prisma`, `nextjs`, `docker`)
+2. **Problem domain** -- the area of concern (`performance`, `hydration`, `cache`)
+3. **Descriptors** -- 1-2 additional terms for discoverability (`ssr`, `database`, `type-safety`)
+
+Good tags:
+
+```yaml
+tags: [prisma, database, performance, n-plus-one]
+tags: [nextjs, react, hydration, ssr]
+tags: [typescript, satisfies, type-safety, config]
+```
+
+Bad tags:
+
+```yaml
+tags: []                    # At least 1 tag required
+tags: [Prisma]              # Must be lowercase
+tags: [prisma, database, performance, n-plus-one, sql, orm, backend, server, node, typescript, fix]
+                            # More than 10 tags
+```
+
+### `problem`
+
+The problem field is a one-sentence summary used for search indexing.
+
+| Constraint | Value |
+| --- | --- |
+| Type | string |
+| Max length | 256 characters |
+| Required | Yes |
+
+A one-sentence summary of the problem. This field is used for search indexing, so include the actual error message, symptom, or observable behavior.
+
+Good problem fields:
+
+```yaml
+problem: "Prisma makes hundreds of individual queries when loading related data in a loop"
+problem: "Docker rebuilds node_modules from scratch on every code change, making builds slow"
+problem: "Type annotation on config object widens types and loses literal inference"
+```
+
+Bad problem fields:
+
+```yaml
+problem: "Something is broken"    # No specifics, no error message
+problem: "It doesn't work"        # Completely unhelpful
+problem: "I have a problem"       # Describes having a problem, not the problem
+```
+
+### `solution_type`
+
+The solution type categorizes how the share addresses the problem.
+
+| Constraint | Value |
+| --- | --- |
+| Type | enum |
+| Values | `fix`, `workaround`, `pattern`, `reference`, `config` |
+| Required | Yes |
+
+Categorizes how the share addresses the problem:
+
+| Value | Description | When to use |
+| --- | --- | --- |
+| `fix` | A direct fix for a bug or error | The solution permanently resolves the root cause |
+| `workaround` | A temporary workaround for a known issue | The root cause is upstream or unfixable; this bypasses it |
+| `pattern` | A reusable coding pattern or architecture | The solution generalizes beyond a single error |
+| `reference` | A lookup guide or cheat sheet | The content is informational, not fixing a specific error |
+| `config` | A configuration change resolving a setup issue | The fix is entirely in config files, not application code |
+
+Most shares are `fix`. When in doubt between `fix` and `pattern`, choose `fix`.
+
+### `created`
+
+The created field records when the share was first written.
+
+| Constraint | Value |
+| --- | --- |
+| Type | string |
+| Format | `YYYY-MM-DD` |
+| Required | Yes |
+
+The date the share was created. Use today's date. Quote the value in YAML if it starts with a number:
+
+```yaml
+created: "2026-02-08"
+```
+
+## Optional frontmatter fields
+
+These fields add context but are not required for validation.
+
+### `environment`
+
+An object specifying the technical context where the solution applies. Recommended for all shares.
+
+```yaml
 environment:
   language: typescript
   framework: nextjs
-  version: "14"
+  version: "14+"
+```
+
+All three sub-fields (`language`, `framework`, `version`) are optional. Quote `version` in YAML if it starts with a number.
+
+### `ai_provider`
+
+Indicates which AI assistant helped create or verify the solution. Only set this if an AI was meaningfully involved. Values: `"claude"`, `"gpt"`, `"gemini"`.
+
+### `related`
+
+An array of slugs linking to related or complementary shares:
+
+```yaml
+related:
+  - fix-prisma-migration-drift
+  - fix-postgres-connection-pooling-serverless
+```
+
+### `verified`
+
+A boolean indicating whether the share has been verified by the shareful.ai platform. This field is set automatically based on user outcome reports. Do not set it manually.
+
+### `updated`
+
+An ISO date (`YYYY-MM-DD`) for when the share was last updated.
+
+## Complete frontmatter example
+
+```yaml
+---
+title: "Fix Prisma N+1 query problem with includes and joins"
+slug: fix-prisma-n-plus-one-queries
+tags: [prisma, database, performance, n-plus-one]
+problem: "Prisma makes hundreds of individual queries when loading related data in a loop"
+solution_type: fix
+created: "2026-02-08"
+environment:
+  language: typescript
+  framework: prisma
+ai_provider: "claude"
+related:
+  - fix-postgres-connection-pooling-serverless
 ---
 ```
 
-## Solution types
-
-| Type | When to use |
-| --- | --- |
-| `fix` | A direct fix that resolves a bug or error |
-| `workaround` | A temporary solution for a known issue that hasn't been resolved upstream |
-| `pattern` | A reusable code pattern, best practice, or architectural approach |
-| `reference` | Reference material, documentation, or explanatory content |
-| `config` | A configuration solution, environment setup, or tooling configuration |
-
 ## Body sections
 
-The markdown body must contain exactly four sections in this order:
+The markdown body must contain exactly four sections in this order. The total body must be under 300 lines. Aim for 60-150 lines.
 
 ### Problem
 
-Describe the issue clearly. Include error messages, symptoms, and when it occurs.
+Show the broken state so readers can confirm they have the same issue.
+
+**Must include:**
+
+- **Broken code** -- a minimal code snippet that reproduces the issue
+- **Error message or symptom** -- the exact error text, incorrect output, or observable bad behavior
+- **Impact** -- quantify when possible ("101 queries instead of 2", "builds take 5 minutes")
+
+**Template:**
 
 ```markdown
 ## Problem
 
-When using `next/dynamic` with SSR disabled, Next.js 14 throws a hydration mismatch
-error because the server-rendered HTML doesn't match the client output...
+[1-2 sentences describing when this problem occurs.]
+
+\`\`\`[language]
+// Code that demonstrates the broken behavior
+\`\`\`
+
+[Error message, incorrect output, or quantified impact.]
 ```
+
+<Callout type="warn">
+**Avoid:** No code shown. No error message. Too much context (entire application instead of minimal reproduction). Explaining the solution in the Problem section.
+</Callout>
 
 ### Solution
 
-Provide the complete solution with code examples. Be specific and actionable.
+Provide working code that readers can copy and apply with minor adaptation.
+
+**Must include:**
+
+- **Complete, runnable code blocks** -- each with a language label
+- **Multiple options when applicable** -- label with "Option 1", "Option 2"
+- **Recommended hint** -- mark the best default with "(recommended)"
+- **Inline comments** -- explain non-obvious lines
+
+**Template for multiple options:**
 
 ```markdown
 ## Solution
 
-Use `next/dynamic` with `ssr: false` and wrap the component in a loading boundary:
+**Option 1: [approach name] (recommended)**
 
-\`\`\`tsx
-import dynamic from "next/dynamic";
+\`\`\`[language]
+// Working code with inline comments
+\`\`\`
 
-const Chart = dynamic(() => import("./Chart"), {
-  ssr: false,
-  loading: () => <div className="h-64 animate-pulse bg-gray-100" />,
-});
+**Option 2: [alternative approach] ([when to prefer this])**
+
+\`\`\`[language]
+// Alternative working code
 \`\`\`
 ```
 
+**Template for single option:**
+
+```markdown
+## Solution
+
+\`\`\`[language]
+// Working code with inline comments
+\`\`\`
+```
+
+<Callout type="warn">
+**Avoid:** No language label on code blocks. Incomplete snippets ("just add `include`" without context). No recommended option when showing multiple approaches. Placeholder code like `// Add your code here`.
+</Callout>
+
 ### Why It Works
 
-Explain the underlying cause and why the solution addresses it.
+Explain the underlying mechanism so readers understand the root cause, not just the fix. Answer "why was it broken?" and "why does the fix resolve it?"
+
+**Must include:**
+
+- **Root cause explanation** -- what was happening under the hood
+- **Mechanism of the fix** -- why the change resolves the root cause
+- **1-3 paragraphs of prose** -- this section is primarily text, not code
+
+**Template:**
 
 ```markdown
 ## Why It Works
 
-The hydration mismatch occurs because the server renders a placeholder while the
-client renders the full component. By explicitly disabling SSR and providing a
-loading fallback, both server and client render the same placeholder initially...
+[First paragraph: explain the default behavior that causes the problem.]
+
+[Second paragraph: explain why the fix changes that behavior.]
+
+[Optional third paragraph: tradeoffs or how different options compare.]
 ```
+
+<Callout type="warn">
+**Avoid:** Restating the solution ("It works because we added `include`"). Linking to external docs instead of explaining here. Too short ("This fixes the bug."). Code-heavy content (save code for the Solution section).
+</Callout>
 
 ### Context
 
-Add relevant context: versions tested, related issues, limitations, or alternatives.
+Help readers determine if the solution applies to their environment and warn about edge cases.
+
+**Must include:**
+
+- **Version requirements** -- list first
+- **Gotchas** -- edge cases, limitations, or scenarios where the solution does not apply
+- **Related tools or alternatives** -- other approaches or debugging aids
+
+**Template:**
 
 ```markdown
 ## Context
 
-- Tested with Next.js 14.1.0 and React 18.2
-- This approach adds a slight delay to initial render
-- For SEO-critical content, consider using `useEffect` with state instead
-- Related: https://github.com/vercel/next.js/issues/12345
+- [Framework/tool] [version]+ required for [feature used in solution]
+- [Gotcha or limitation]
+- [Related tool, alternative approach, or debugging tip]
 ```
+
+<Callout type="warn">
+**Avoid:** No version info. Paragraph form instead of bullets. Repeating the solution explanation. More than 6 bullets.
+</Callout>
+
+## Section length guidelines
+
+Keep each section within these line-count ranges to maintain readability.
+
+| Section | Target lines | Maximum lines |
+| --- | --- | --- |
+| Problem | 5-20 | 40 |
+| Solution | 15-60 | 120 |
+| Why It Works | 5-15 | 30 |
+| Context | 3-8 | 15 |
+| **Total body** | **60-150** | **300** |
 
 ## Validation rules
 
@@ -145,20 +409,8 @@ The CLI validates shares when you run `npx shareful-ai check`. A share must meet
 - **Tags**: 1-10 tags, each lowercase, max 32 characters
 - **Problem**: Required, max 256 characters
 - **Solution type**: Must be one of the five valid types
+- **Created**: Required, `YYYY-MM-DD` format
 - **Body**: Max 300 lines, must contain all four required sections (`## Problem`, `## Solution`, `## Why It Works`, `## Context`)
-
-## Slug generation
-
-When you use `npx shareful-ai create`, the CLI auto-generates a slug from the title:
-
-- Converts to lowercase
-- Removes non-alphanumeric characters (except spaces and hyphens)
-- Replaces spaces with hyphens
-- Removes consecutive hyphens
-- Strips leading and trailing hyphens
-- Trims to 64 characters
-
-For example, "Fix Next.js Hydration Mismatch" becomes `fix-nextjs-hydration-mismatch`.
 
 ## Validation errors
 
@@ -176,4 +428,5 @@ Run `npx shareful-ai check` to validate all shares. Common errors and how to fix
 ## Next steps
 
 - Follow the [creating shares](/docs/creating-shares) guide for best practices
+- Browse [examples](/docs/examples) of good and bad shares
 - See the [CLI reference](/docs/cli) for all command options

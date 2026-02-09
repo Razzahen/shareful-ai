@@ -1,22 +1,18 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { jsonRequest, parseResponse } from "../helpers";
 
-vi.mock("@/lib/indexer", () => ({
-  indexRepo: vi.fn(),
-}));
-
 vi.mock("@/lib/registry", () => ({
   isRegistered: vi.fn(),
   registerRepo: vi.fn(),
+  enqueueIndexJob: vi.fn(),
 }));
 
 import { POST } from "@/app/api/index/route";
-import { indexRepo } from "@/lib/indexer";
-import { isRegistered, registerRepo } from "@/lib/registry";
+import { enqueueIndexJob, isRegistered, registerRepo } from "@/lib/registry";
 
-const mockIndexRepo = vi.mocked(indexRepo);
 const mockIsRegistered = vi.mocked(isRegistered);
 const mockRegisterRepo = vi.mocked(registerRepo);
+const mockEnqueueIndexJob = vi.mocked(enqueueIndexJob);
 
 const URL = "http://localhost/api/index";
 
@@ -71,40 +67,40 @@ describe("POST /api/index", () => {
   });
 
   describe("success", () => {
-    it("indexes without registering when already registered", async () => {
+    it("enqueues without registering when already registered", async () => {
       mockIsRegistered.mockResolvedValue(true);
-      mockIndexRepo.mockResolvedValue(5);
+      mockEnqueueIndexJob.mockResolvedValue(undefined);
 
       const { status, body } = await parseResponse(
         await POST(jsonRequest(URL, { repo: "alice/shares" }))
       );
 
       expect(status).toBe(200);
-      expect(body.indexed).toBe(5);
-      expect(body.message).toContain("5");
+      expect(body.message).toContain("Queued");
       expect(mockRegisterRepo).not.toHaveBeenCalled();
-      expect(mockIndexRepo).toHaveBeenCalledWith("alice", "shares");
+      expect(mockEnqueueIndexJob).toHaveBeenCalledWith("alice", "shares");
     });
 
-    it("auto-registers and indexes when not registered", async () => {
+    it("auto-registers and enqueues when not registered", async () => {
       mockIsRegistered.mockResolvedValue(false);
       mockRegisterRepo.mockResolvedValue(undefined as never);
-      mockIndexRepo.mockResolvedValue(3);
+      mockEnqueueIndexJob.mockResolvedValue(undefined);
 
       const { status, body } = await parseResponse(
         await POST(jsonRequest(URL, { repo: "alice/shares" }))
       );
 
       expect(status).toBe(200);
-      expect(body.indexed).toBe(3);
+      expect(body.message).toContain("Queued");
       expect(mockRegisterRepo).toHaveBeenCalledWith("alice", "shares");
+      expect(mockEnqueueIndexJob).toHaveBeenCalledWith("alice", "shares");
     });
   });
 
   describe("errors", () => {
-    it("returns 500 when indexRepo throws", async () => {
+    it("returns 500 when enqueueIndexJob throws", async () => {
       mockIsRegistered.mockResolvedValue(true);
-      mockIndexRepo.mockRejectedValue(new Error("Index failed"));
+      mockEnqueueIndexJob.mockRejectedValue(new Error("Queue failed"));
 
       const { status, body } = await parseResponse(
         await POST(jsonRequest(URL, { repo: "alice/shares" }))

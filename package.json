@@ -5,9 +5,7 @@
     "apps/*"
   ],
   "devDependencies": {
-    "@biomejs/biome": "2.3.13",
     "husky": "^9.1.7",
-    "lint-staged": "^16.2.7",
     "turbo": "^2",
     "ultracite": "7.1.5"
   },
@@ -15,13 +13,15 @@
     "build": "turbo build",
     "dev": "turbo dev",
     "lint": "turbo lint",
+    "lint:fix": "turbo lint:fix",
+    "format": "turbo format",
+    "format:check": "turbo format:check",
+    "check-types": "turbo check-types",
     "check": "ultracite check",
     "fix": "ultracite fix",
     "prepare": "husky"
   },
-  "lint-staged": {
-    "*.{js,jsx,ts,tsx,json,jsonc,css,scss,md,mdx}": [
-      "npx ultracite fix"
-    ]
+  "dependencies": {
+    "nuqs": "^2.8.8"
   }
 }

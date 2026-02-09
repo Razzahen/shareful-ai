@@ -1,5 +1,4 @@
-import { kv } from "@vercel/kv";
-import { and, eq, sql } from "drizzle-orm";
+import { and, eq, inArray, sql } from "drizzle-orm";
 import { db } from "./db";
 import { outcomes, shares, shareTags, tags, verifications } from "./schema";
 import type { Share, ShareWithStats, SolutionType } from "./types";
@@ -38,7 +37,7 @@ async function getTagsForShares(
     .select({ shareId: shareTags.shareId, tagName: tags.name })
     .from(shareTags)
     .innerJoin(tags, eq(tags.id, shareTags.tagId))
-    .where(sql`${shareTags.shareId} = ANY(${shareIds})`);
+    .where(inArray(shareTags.shareId, shareIds));
 
   const map = new Map<number, string[]>();
   for (const r of results) {
@@ -50,10 +49,14 @@ async function getTagsForShares(
 }
 
 export async function enrichWithStats(share: Share): Promise<ShareWithStats> {
-  const shareKey = `${share.owner}/${share.repo}/${share.slug}`;
-
   const [shareRow] = await db
-    .select({ id: shares.id })
+    .select({
+      id: shares.id,
+      viewCount: shares.viewCount,
+      installCount: shares.installCount,
+      firstSeenAt: shares.firstSeenAt,
+      indexedBy: shares.indexedBy,
+    })
     .from(shares)
     .where(
       and(
@@ -66,8 +69,17 @@ export async function enrichWithStats(share: Share): Promise<ShareWithStats> {
 
   let outcomeData = { success: 0, failure: 0 };
   let verificationCount = 0;
+  let views = 0;
+  let installCount = 0;
+  let firstSeenAt = new Date().toISOString();
+  let indexedBy = "shareful.ai";
 
   if (shareRow) {
+    views = shareRow.viewCount;
+    installCount = shareRow.installCount;
+    firstSeenAt = shareRow.firstSeenAt.toISOString();
+    indexedBy = shareRow.indexedBy;
+
     const [outcome] = await db
       .select({
         successCount: outcomes.successCount,
@@ -92,7 +104,6 @@ export async function enrichWithStats(share: Share): Promise<ShareWithStats> {
     verificationCount = vc?.count ?? 0;
   }
 
-  const views = (await kv.get<number>(`views:${shareKey}`)) ?? 0;
   const total = outcomeData.success + outcomeData.failure;
 
   return {
@@ -101,6 +112,9 @@ export async function enrichWithStats(share: Share): Promise<ShareWithStats> {
     outcome: outcomeData,
     verifications: verificationCount,
     successRate: total > 0 ? outcomeData.success / total : null,
+    install_count: installCount,
+    first_seen_at: firstSeenAt,
+    indexed_by: indexedBy,
   };
 }
 
@@ -110,8 +124,13 @@ export async function searchShares(
     type?: SolutionType;
     tags?: string[];
     limit?: number;
+    cursor?: number;
   }
-): Promise<{ shares: ShareWithStats[]; total: number }> {
+): Promise<{
+  shares: ShareWithStats[];
+  total: number;
+  nextCursor: number | null;
+}> {
   const limit = options?.limit ?? 10;
 
   const ftsQuery = sql`websearch_to_tsquery('english', ${query})`;
@@ -139,6 +158,10 @@ export async function searchShares(
     );
   }
 
+  if (options?.cursor) {
+    conditions.push(sql`${shares.id} < ${options.cursor}`);
+  }
+
   const whereClause = sql.join(conditions, sql` AND `);
 
   const results = await db
@@ -149,6 +172,10 @@ export async function searchShares(
       successCount: sql<number>`COALESCE(${outcomes.successCount}, 0)`,
       failureCount: sql<number>`COALESCE(${outcomes.failureCount}, 0)`,
       verificationCount: sql<number>`COALESCE(vc.cnt, 0)`,
+      viewCount: shares.viewCount,
+      installCount: shares.installCount,
+      firstSeenAt: shares.firstSeenAt,
+      indexedBy: shares.indexedBy,
     })
     .from(shares)
     .leftJoin(outcomes, eq(outcomes.shareId, shares.id))
@@ -166,6 +193,7 @@ export async function searchShares(
               / (COALESCE(${outcomes.successCount}, 0) + COALESCE(${outcomes.failureCount}, 0)) * 2.0
             ELSE 1.0
           END
+        + log(COALESCE(${shares.installCount}, 0) + 1) * 3.0
       ) DESC`
     )
     .limit(limit);
@@ -173,28 +201,30 @@ export async function searchShares(
   const shareIds = results.map((r) => r.share.id);
   const tagMap = await getTagsForShares(shareIds);
 
-  const enriched: ShareWithStats[] = await Promise.all(
-    results.map(async (r) => {
-      const shareKey = `${r.share.owner}/${r.share.repo}/${r.share.slug}`;
-      const views = (await kv.get<number>(`views:${shareKey}`)) ?? 0;
-      const total = r.successCount + r.failureCount;
+  const enriched: ShareWithStats[] = results.map((r) => {
+    const total = r.successCount + r.failureCount;
 
-      return {
-        ...shareToModel(r.share, tagMap.get(r.share.id) ?? []),
-        views,
-        outcome: { success: r.successCount, failure: r.failureCount },
-        verifications: r.verificationCount,
-        successRate: total > 0 ? r.successCount / total : null,
-      };
-    })
-  );
+    return {
+      ...shareToModel(r.share, tagMap.get(r.share.id) ?? []),
+      views: r.viewCount,
+      outcome: { success: r.successCount, failure: r.failureCount },
+      verifications: r.verificationCount,
+      successRate: total > 0 ? r.successCount / total : null,
+      install_count: r.installCount,
+      first_seen_at: r.firstSeenAt.toISOString(),
+      indexed_by: r.indexedBy,
+    };
+  });
 
   const [countResult] = await db
     .select({ count: sql<number>`cast(count(*) as int)` })
     .from(shares)
     .where(whereClause);
 
-  return { shares: enriched, total: countResult?.count ?? 0 };
+  const lastId = results.length > 0 ? (results.at(-1)?.share.id ?? null) : null;
+  const nextCursor = results.length === limit ? lastId : null;
+
+  return { shares: enriched, total: countResult?.count ?? 0, nextCursor };
 }
 
 export async function incrementViews(
@@ -202,9 +232,10 @@ export async function incrementViews(
   repo: string,
   slug: string
 ): Promise<void> {
-  const key = `views:${owner}/${repo}/${slug}`;
-  await kv.incr(key);
-
-  const contribKey = `contributor:${owner}:views`;
-  await kv.incr(contribKey);
+  await db
+    .update(shares)
+    .set({ viewCount: sql`${shares.viewCount} + 1` })
+    .where(
+      and(eq(shares.owner, owner), eq(shares.repo, repo), eq(shares.slug, slug))
+    );
 }

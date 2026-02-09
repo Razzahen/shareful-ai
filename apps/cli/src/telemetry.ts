@@ -4,11 +4,15 @@ interface ShareTelemetryData {
   event: "share";
   slug?: string;
   shareCount: string;
+  owner?: string;
+  repo?: string;
 }
 
-interface InitRepoTelemetryData {
-  event: "init-repo";
+interface InitTelemetryData {
+  event: "init";
   repoName: string;
+  owner?: string;
+  repo?: string;
 }
 
 interface CheckTelemetryData {
@@ -23,13 +27,13 @@ interface AddSkillsTelemetryData {
 
 type TelemetryData =
   | ShareTelemetryData
-  | InitRepoTelemetryData
+  | InitTelemetryData
   | CheckTelemetryData
   | AddSkillsTelemetryData;
 
 let cliVersion: string | null = null;
 
-export function isEnabled(): boolean {
+function isEnabled(): boolean {
   return !(process.env.DISABLE_TELEMETRY || process.env.DO_NOT_TRACK);
 }
 

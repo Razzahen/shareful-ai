@@ -29,18 +29,22 @@ export async function GET(request: Request) {
   const tags = searchParams.get("tags")?.split(",").filter(Boolean);
   const parsedLimit = Number.parseInt(searchParams.get("limit") ?? "10", 10);
   const limit = Math.min(Number.isNaN(parsedLimit) ? 10 : parsedLimit, 50);
+  const rawCursor = searchParams.get("cursor");
+  const cursor = rawCursor ? Number.parseInt(rawCursor, 10) : undefined;
 
   try {
-    const { shares, total } = await searchShares(q, {
+    const { shares, total, nextCursor } = await searchShares(q, {
       type,
       tags,
       limit,
+      cursor: Number.isNaN(cursor) ? undefined : cursor,
     });
 
     return NextResponse.json({
       shares,
       total,
       query: q,
+      nextCursor,
     });
   } catch (error) {
     console.error("Search error:", error);

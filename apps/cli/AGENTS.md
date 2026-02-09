@@ -33,7 +33,7 @@ src/
   cli.ts            # Entry point, command routing, banner display
   create.ts         # Interactive share creation with @clack/prompts
   check.ts          # Validate all SHARE.md files in repo
-  init-repo.ts      # Scaffold a new shares repository
+  init.ts           # Scaffold a new shares repository
   search.ts         # Search shareful.ai API for solutions
   share-parser.ts   # YAML frontmatter parsing and validation (gray-matter)
   config.ts         # Load config for shares repo path

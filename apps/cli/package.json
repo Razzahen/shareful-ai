@@ -30,11 +30,11 @@
   ],
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/shareful-ai/shareful.git"
+    "url": "git+https://github.com/shareful-ai/shareful-ai.git"
   },
   "homepage": "https://shareful.ai",
   "bugs": {
-    "url": "https://github.com/shareful-ai/shareful/issues"
+    "url": "https://github.com/shareful-ai/shareful-ai/issues"
   },
   "author": "",
   "license": "MIT",
@@ -48,6 +48,7 @@
   "devDependencies": {
     "@types/node": "^22.10.0",
     "obuild": "^0.4.22",
+    "prettier": "^3.6.2",
     "typescript": "^5.9.3"
   },
   "engines": {

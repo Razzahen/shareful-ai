@@ -1,0 +1,12 @@
+{
+  "$schema": "https://unpkg.com/knip@5/schema.json",
+  "ignore": [".vercel/**"],
+  "workspaces": {
+    "apps/cli": {
+      "entry": ["build.config.mjs"]
+    },
+    "apps/docs": {
+      "entry": ["source.config.ts"]
+    }
+  }
+}

@@ -17,7 +17,11 @@ function searchRequest(params: string) {
 describe("GET /api/search", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    mockSearchShares.mockResolvedValue({ shares: [], total: 0 });
+    mockSearchShares.mockResolvedValue({
+      shares: [],
+      total: 0,
+      nextCursor: null,
+    });
   });
 
   describe("validation", () => {
@@ -50,6 +54,7 @@ describe("GET /api/search", () => {
         type: "fix",
         tags: undefined,
         limit: 10,
+        cursor: undefined,
       });
     });
 
@@ -60,6 +65,7 @@ describe("GET /api/search", () => {
         type: undefined,
         tags: undefined,
         limit: 10,
+        cursor: undefined,
       });
     });
 
@@ -70,6 +76,7 @@ describe("GET /api/search", () => {
         type: undefined,
         tags: undefined,
         limit: 10,
+        cursor: undefined,
       });
     });
 
@@ -80,6 +87,7 @@ describe("GET /api/search", () => {
         type: undefined,
         tags: undefined,
         limit: 50,
+        cursor: undefined,
       });
     });
 
@@ -90,6 +98,7 @@ describe("GET /api/search", () => {
         type: undefined,
         tags: undefined,
         limit: 10,
+        cursor: undefined,
       });
     });
 
@@ -100,6 +109,7 @@ describe("GET /api/search", () => {
         type: undefined,
         tags: ["react", "nextjs"],
         limit: 10,
+        cursor: undefined,
       });
     });
 
@@ -116,6 +126,7 @@ describe("GET /api/search", () => {
       mockSearchShares.mockResolvedValue({
         shares: [{ title: "Test" } as never],
         total: 1,
+        nextCursor: null,
       });
 
       const { status, body } = await parseResponse(

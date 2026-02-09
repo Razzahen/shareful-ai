@@ -1,0 +1,83 @@
+---
+title: What is a share?
+description: Understand what shares are, how they work, and why the structured format helps developers and AI agents solve problems faster.
+---
+
+A share is a structured markdown file (`SHARE.md`) that captures a coding solution in a format that both humans and AI agents can discover, read, and apply. Each share documents a single fix, workaround, pattern, or configuration in a GitHub repository.
+
+This page explains how shares work and why the format matters.
+
+## How shares work
+
+Shares follow a three-step lifecycle from creation to discovery:
+
+1. **Create** -- You capture a solution as a `SHARE.md` file in a GitHub repository using the CLI or by writing the file directly.
+2. **Index** -- Shareful indexes published shares from public repositories, extracting metadata for search.
+3. **Discover** -- Developers and AI agents search for solutions by error message, technology, or problem domain using the CLI or the search API.
+
+## The SHARE.md file
+
+Every share lives in a directory named after its slug inside a `shares/` folder:
+
+```
+shares/
+  fix-nextjs-hydration-mismatch/
+    SHARE.md
+  prisma-connection-pooling/
+    SHARE.md
+```
+
+A `SHARE.md` file has two parts: YAML frontmatter and a markdown body.
+
+The **frontmatter** contains structured metadata -- title, slug, tags, a one-sentence problem description, and the solution type. This metadata powers search and filtering.
+
+The **body** contains four required sections that walk the reader through the problem and its solution:
+
+| Section | Purpose |
+| --- | --- |
+| `## Problem` | Show the broken state with code and error messages |
+| `## Solution` | Provide complete, working code |
+| `## Why It Works` | Explain the root cause and why the fix resolves it |
+| `## Context` | List version requirements, gotchas, and alternatives |
+
+Here's a minimal example:
+
+```yaml
+---
+title: Fix Next.js hydration mismatch with dynamic imports
+slug: fix-nextjs-hydration-mismatch
+tags: [nextjs, react, hydration]
+problem: Component using window throws hydration mismatch error
+solution_type: fix
+created: "2025-01-15"
+---
+```
+
+## Solution types
+
+Every share has a `solution_type` that categorizes how it addresses the problem:
+
+| Type | When to use | Title convention |
+| --- | --- | --- |
+| `fix` | The solution permanently resolves the root cause of a bug or error | "Fix ..." |
+| `workaround` | The root cause is upstream or unfixable; this temporarily bypasses it | "Workaround for ..." |
+| `pattern` | A reusable coding pattern or architectural approach that generalizes beyond a single error | "Use ...", "Implement ..." |
+| `reference` | A lookup guide, cheat sheet, or comparison that is informational rather than fixing a specific error | "Guide to ...", "Reference for ..." |
+| `config` | The solution is entirely in configuration files, not application code | "Configure ..." |
+
+Most shares are `fix` type. Use `pattern` only when the solution generalizes beyond a single error.
+
+## Why structured format matters
+
+A standardized format provides four benefits:
+
+- **Scannable** -- You know exactly where to find the error message (Problem), the fix (Solution), the explanation (Why It Works), and the caveats (Context).
+- **Searchable** -- YAML frontmatter enables machine-powered search and filtering by tags, solution type, and problem description.
+- **Complete** -- Four mandatory body sections ensure every share includes the problem, the fix, the explanation, and the context. No half-finished solutions.
+- **AI-readable** -- AI agents can parse the structured format, match shares to errors, and apply solutions programmatically.
+
+## Next steps
+
+- Read the [share format specification](/docs/share-format) for field constraints and validation rules
+- Follow the [creating shares](/docs/creating-shares) guide to write your first share
+- Browse [examples](/docs/examples) of good and bad shares

@@ -1,14 +1,11 @@
-import { kv } from "@vercel/kv";
-import { and, eq, sql } from "drizzle-orm";
+import { and, desc, eq, sql } from "drizzle-orm";
 import { db } from "./db";
-import { outcomes, shares, verifications } from "./schema";
+import { leaderboardEntries, outcomes, shares, verifications } from "./schema";
 import type { ContributorProfile, Reputation, ShareWithStats } from "./types";
 
-export async function recalculateReputation(
-  username: string
-): Promise<Reputation> {
+async function recalculateReputation(username: string): Promise<Reputation> {
   const userShares = await db
-    .select({ id: shares.id })
+    .select({ id: shares.id, viewCount: shares.viewCount })
     .from(shares)
     .where(eq(shares.owner, username));
 
@@ -17,6 +14,7 @@ export async function recalculateReputation(
   }
 
   const shareIds = userShares.map((s) => s.id);
+  const totalViews = userShares.reduce((sum, s) => sum + s.viewCount, 0);
 
   const [outcomeAgg] = await db
     .select({
@@ -32,9 +30,6 @@ export async function recalculateReputation(
     })
     .from(verifications)
     .where(sql`${verifications.shareId} = ANY(${shareIds})`);
-
-  const totalViews =
-    (await kv.get<number>(`contributor:${username}:views`)) ?? 0;
 
   const totalSuccess = outcomeAgg?.totalSuccess ?? 0;
   const totalOutcomes = totalSuccess + (outcomeAgg?.totalFailure ?? 0);
@@ -52,19 +47,31 @@ export async function recalculateReputation(
     avg_success_rate: Math.round(avgSuccessRate * 100) / 100,
   };
 
-  await kv.zadd("leaderboard:all-time", {
-    score: reputation.score,
-    member: username,
-  });
+  const monthKey = new Date().toISOString().slice(0, 7);
 
-  const monthKey = `leaderboard:monthly:${new Date().toISOString().slice(0, 7)}`;
-  await kv.zadd(monthKey, { score: reputation.score, member: username });
+  await db
+    .insert(leaderboardEntries)
+    .values([
+      {
+        username,
+        period: "all-time",
+        score: reputation.score,
+      },
+      {
+        username,
+        period: monthKey,
+        score: reputation.score,
+      },
+    ])
+    .onConflictDoUpdate({
+      target: [leaderboardEntries.username, leaderboardEntries.period],
+      set: {
+        score: sql`excluded.score`,
+        updatedAt: sql`now()`,
+      },
+    });
 
   return reputation;
-}
-
-export function getReputation(username: string): Promise<Reputation> {
-  return recalculateReputation(username);
 }
 
 export async function getContributorProfile(
@@ -83,44 +90,43 @@ export async function getContributorProfile(
     return null;
   }
 
-  const reputation = await getReputation(username);
+  const reputation = await recalculateReputation(username);
 
-  const enrichedShares: ShareWithStats[] = await Promise.all(
-    userShares.map(async (s) => {
-      const shareKey = `${s.owner}/${s.repo}/${s.slug}`;
-      const views = (await kv.get<number>(`views:${shareKey}`)) ?? 0;
-      const outcome = s.outcomes[0] ?? {
-        successCount: 0,
-        failureCount: 0,
-      };
-      const total = outcome.successCount + outcome.failureCount;
+  const enrichedShares: ShareWithStats[] = userShares.map((s) => {
+    const outcome = s.outcomes[0] ?? {
+      successCount: 0,
+      failureCount: 0,
+    };
+    const total = outcome.successCount + outcome.failureCount;
 
-      return {
-        title: s.title,
-        slug: s.slug,
-        tags: s.shareTags.map((st) => st.tag.name),
-        problem: s.problem,
-        solution_type: s.solutionType,
-        verified: s.verified > 0,
-        created: s.createdAt?.toISOString(),
-        updated: s.updatedAt?.toISOString(),
-        ai_provider: s.aiProvider ?? undefined,
-        environment: s.environment ?? undefined,
-        related: s.related ?? undefined,
-        owner: s.owner,
-        repo: s.repo,
-        content: s.content,
-        url: s.url,
-        views,
-        outcome: {
-          success: outcome.successCount,
-          failure: outcome.failureCount,
-        },
-        verifications: s.verifications.length,
-        successRate: total > 0 ? outcome.successCount / total : null,
-      };
-    })
-  );
+    return {
+      title: s.title,
+      slug: s.slug,
+      tags: s.shareTags.map((st) => st.tag.name),
+      problem: s.problem,
+      solution_type: s.solutionType,
+      verified: s.verified > 0,
+      created: s.createdAt?.toISOString(),
+      updated: s.updatedAt?.toISOString(),
+      ai_provider: s.aiProvider ?? undefined,
+      environment: s.environment ?? undefined,
+      related: s.related ?? undefined,
+      owner: s.owner,
+      repo: s.repo,
+      content: s.content,
+      url: s.url,
+      views: s.viewCount,
+      outcome: {
+        success: outcome.successCount,
+        failure: outcome.failureCount,
+      },
+      verifications: s.verifications.length,
+      successRate: total > 0 ? outcome.successCount / total : null,
+      install_count: s.installCount,
+      first_seen_at: s.firstSeenAt.toISOString(),
+      indexed_by: s.indexedBy,
+    };
+  });
 
   return { username, ...reputation, shares: enrichedShares };
 }
@@ -130,24 +136,19 @@ export async function getLeaderboard(
   limit = 20
 ): Promise<{ username: string; score: number }[]> {
   const key =
-    period === "monthly"
-      ? `leaderboard:monthly:${new Date().toISOString().slice(0, 7)}`
-      : "leaderboard:all-time";
+    period === "monthly" ? new Date().toISOString().slice(0, 7) : "all-time";
 
-  const results = await kv.zrange(key, 0, limit - 1, {
-    rev: true,
-    withScores: true,
-  });
+  const results = await db
+    .select({
+      username: leaderboardEntries.username,
+      score: leaderboardEntries.score,
+    })
+    .from(leaderboardEntries)
+    .where(eq(leaderboardEntries.period, key))
+    .orderBy(desc(leaderboardEntries.score))
+    .limit(limit);
 
-  const entries: { username: string; score: number }[] = [];
-  for (let i = 0; i < results.length; i += 2) {
-    entries.push({
-      username: results[i] as string,
-      score: results[i + 1] as number,
-    });
-  }
-
-  return entries;
+  return results;
 }
 
 export async function recordOutcome(

@@ -1,6 +1,14 @@
+import { GoogleAnalytics } from "@next/third-parties/google";
 import { RootProvider } from "fumadocs-ui/provider/next";
+import type { Metadata } from "next";
 import localFont from "next/font/local";
 import "./global.css";
+
+export const metadata: Metadata = {
+  other: {
+    "apple-mobile-web-app-title": "Shareful",
+  },
+};
 
 const apercu = localFont({
   src: [
@@ -40,6 +48,7 @@ export default function Layout({ children }: LayoutProps<"/">) {
           {children}
         </RootProvider>
       </body>
+      <GoogleAnalytics gaId="G-YXWZHRMGJS" />
     </html>
   );
 }

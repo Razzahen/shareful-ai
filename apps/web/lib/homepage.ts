@@ -1,4 +1,3 @@
-import { kv } from "@vercel/kv";
 import { desc, eq, gt, sql } from "drizzle-orm";
 import { db } from "./db";
 import { outcomes, shares, shareTags, tags } from "./schema";
@@ -62,6 +61,7 @@ async function fetchSharesWithStats(
     owner: shares.owner,
     repo: shares.repo,
     createdAt: shares.createdAt,
+    viewCount: shares.viewCount,
     successCount: sql<number>`COALESCE(${outcomes.successCount}, 0)`,
     failureCount: sql<number>`COALESCE(${outcomes.failureCount}, 0)`,
     verificationCount: sql<number>`COALESCE(vc.cnt, 0)`,
@@ -93,27 +93,23 @@ async function fetchSharesWithStats(
   const shareIds = results.map((r) => r.id);
   const tagMap = await getTagsForShareIds(shareIds);
 
-  const enriched: LeaderboardShare[] = await Promise.all(
-    results.map(async (r) => {
-      const views =
-        (await kv.get<number>(`views:${r.owner}/${r.repo}/${r.slug}`)) ?? 0;
-      const totalOutcomes = r.successCount + r.failureCount;
+  const enriched: LeaderboardShare[] = results.map((r) => {
+    const totalOutcomes = r.successCount + r.failureCount;
 
-      return {
-        title: r.title,
-        slug: r.slug,
-        tags: tagMap.get(r.id) ?? [],
-        problem: r.problem,
-        solution_type: r.solutionType,
-        owner: r.owner,
-        repo: r.repo,
-        created: r.createdAt?.toISOString(),
-        views,
-        verifications: r.verificationCount,
-        successRate: totalOutcomes > 0 ? r.successCount / totalOutcomes : null,
-      };
-    })
-  );
+    return {
+      title: r.title,
+      slug: r.slug,
+      tags: tagMap.get(r.id) ?? [],
+      problem: r.problem,
+      solution_type: r.solutionType,
+      owner: r.owner,
+      repo: r.repo,
+      created: r.createdAt?.toISOString(),
+      views: r.viewCount,
+      verifications: r.verificationCount,
+      successRate: totalOutcomes > 0 ? r.successCount / totalOutcomes : null,
+    };
+  });
 
   if (orderBy !== "recent") {
     enriched.sort((a, b) => b.views - a.views);

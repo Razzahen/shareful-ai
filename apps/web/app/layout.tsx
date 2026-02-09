@@ -1,8 +1,8 @@
+import { GoogleAnalytics } from "@next/third-parties/google";
 import { Agentation } from "agentation";
 import type { Metadata } from "next";
 import localFont from "next/font/local";
-import { Footer } from "@/components/footer";
-import { Header } from "@/components/header";
+import FooterSection from "@/components/footer-1";
 import "./globals.css";
 
 const apercu = localFont({
@@ -29,6 +29,17 @@ const apercu = localFont({
     },
   ],
   variable: "--font-apercu",
+});
+
+const apercuMono = localFont({
+  src: [
+    {
+      path: "../public/fonts/apercu-mono.woff2",
+      weight: "400",
+      style: "normal",
+    },
+  ],
+  variable: "--font-apercu-mono",
 });
 
 export const metadata: Metadata = {
@@ -58,15 +69,15 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${apercu.variable} flex min-h-screen flex-col antialiased`}
+        className={`${apercu.variable} ${apercuMono.variable} flex min-h-screen flex-col font-sans antialiased`}
       >
-        <Header />
         <main className="flex-1" id="main-content">
           {children}
         </main>
-        <Footer />
+        <FooterSection />
         {process.env.NODE_ENV === "development" && <Agentation />}
       </body>
+      <GoogleAnalytics gaId="G-YXWZHRMGJS" />
     </html>
   );
 }

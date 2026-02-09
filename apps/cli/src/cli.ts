@@ -6,7 +6,8 @@ import { fileURLToPath } from "node:url";
 import { runAddSkills } from "./add-skills.ts";
 import { runCheck } from "./check.ts";
 import { runCreate } from "./create.ts";
-import { runInitRepo } from "./init-repo.ts";
+import { runInitRepo } from "./init.ts";
+import { runRegister } from "./register-command.ts";
 import { runSearch } from "./search.ts";
 import { setVersion } from "./telemetry.ts";
 
@@ -50,9 +51,9 @@ const GRAYS = [
 
 function showLogo(): void {
   console.log();
-  LOGO_LINES.forEach((line, i) => {
+  for (const [i, line] of LOGO_LINES.entries()) {
     console.log(`${GRAYS[i]}${line}${RESET}`);
-  });
+  }
 }
 
 function showBanner(): void {
@@ -73,6 +74,9 @@ function showBanner(): void {
     `  ${DIM}$${RESET} ${TEXT}npx shareful-ai check${RESET}            ${DIM}Validate shares${RESET}`
   );
   console.log(
+    `  ${DIM}$${RESET} ${TEXT}npx shareful-ai register${RESET}         ${DIM}Register repo for indexing${RESET}`
+  );
+  console.log(
     `  ${DIM}$${RESET} ${TEXT}npx shareful-ai skills${RESET}           ${DIM}Install agent skills${RESET}`
   );
   console.log();
@@ -88,6 +92,7 @@ ${BOLD}Commands:${RESET}
   init [name]         Create a new shares repository
   create              Create a new SHARE.md interactively
   search <query>      Search shareful.ai for shared solutions
+  register [o/r]      Register a repo for indexing on shareful.ai
   check               Validate all SHARE.md files
   skills              Install agent skills globally
 
@@ -106,6 +111,8 @@ ${BOLD}Examples:${RESET}
   ${DIM}$${RESET} shareful-ai create
   ${DIM}$${RESET} shareful-ai create -t "Fix hydration error" --tags "nextjs,react" --type fix -p "Hydration mismatch"
   ${DIM}$${RESET} shareful-ai search "hydration error"
+  ${DIM}$${RESET} shareful-ai register
+  ${DIM}$${RESET} shareful-ai register owner/repo
   ${DIM}$${RESET} shareful-ai check
   ${DIM}$${RESET} shareful-ai skills
 
@@ -145,6 +152,11 @@ async function main(): Promise<void> {
       showLogo();
       console.log();
       await runAddSkills();
+      break;
+    case "register":
+      showLogo();
+      console.log();
+      await runRegister(restArgs);
       break;
     case "check":
     case "validate":

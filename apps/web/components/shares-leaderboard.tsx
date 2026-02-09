@@ -2,7 +2,6 @@
 
 import Link from "next/link";
 import { useState } from "react";
-import { SearchBar } from "@/components/search-bar";
 import { SolutionTypeBadge } from "@/components/solution-type-badge";
 import type { LeaderboardData } from "@/lib/homepage";
 
@@ -46,8 +45,6 @@ export function SharesLeaderboard({
       <p className="font-mono text-muted-foreground text-xs uppercase tracking-widest">
         Shares Leaderboard
       </p>
-
-      <SearchBar />
 
       <div className="flex gap-1 rounded-lg bg-muted p-1">
         {tabs.map((tab) => (

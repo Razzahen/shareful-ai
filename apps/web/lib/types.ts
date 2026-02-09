@@ -35,20 +35,9 @@ export interface ShareWithStats extends Share {
   outcome: { success: number; failure: number };
   verifications: number;
   successRate: number | null;
-}
-
-export interface ShareManifestEntry {
-  slug: string;
-  title: string;
-  tags: string[];
-  problem: string;
-  solution_type: SolutionType;
-}
-
-export interface ShareManifest {
-  version: number;
-  owner: string;
-  shares: ShareManifestEntry[];
+  install_count: number;
+  first_seen_at: string;
+  indexed_by: string;
 }
 
 export interface RepoEntry {
@@ -67,10 +56,4 @@ export interface Reputation {
 export interface ContributorProfile extends Reputation {
   username: string;
   shares: ShareWithStats[];
-}
-
-export interface SearchResponse {
-  shares: ShareWithStats[];
-  total: number;
-  query: string;
 }

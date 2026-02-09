@@ -40,8 +40,48 @@ export const repos = pgTable(
     indexedAt: timestamp("indexed_at", { withTimezone: true })
       .notNull()
       .defaultNow(),
+    gitSha: varchar("git_sha", { length: 40 }),
+    lastIndexedAt: timestamp("last_indexed_at", { withTimezone: true }),
+    status: varchar("status", { length: 16 }).notNull().default("active"),
+    trustScore: integer("trust_score").notNull().default(0),
+    ownerVerified: integer("owner_verified").notNull().default(0),
   },
   (table) => [uniqueIndex("repos_owner_repo_idx").on(table.owner, table.repo)]
+);
+
+// ── Index Jobs ────────────────────────────────────────────────
+
+export const indexJobs = pgTable(
+  "index_jobs",
+  {
+    id: serial("id").primaryKey(),
+    owner: varchar("owner", { length: 128 }).notNull(),
+    repo: varchar("repo", { length: 128 }).notNull(),
+    status: varchar("status", { length: 16 }).notNull().default("pending"),
+    attempts: integer("attempts").notNull().default(0),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    processedAt: timestamp("processed_at", { withTimezone: true }),
+    error: text("error"),
+  },
+  (table) => [index("idx_index_jobs_status").on(table.status, table.createdAt)]
+);
+
+// ── Index Upstreams ──────────────────────────────────────────
+
+export const indexUpstreams = pgTable(
+  "index_upstreams",
+  {
+    id: serial("id").primaryKey(),
+    name: varchar("name", { length: 128 }).notNull(),
+    url: text("url").notNull(),
+    trustScore: integer("trust_score").notNull().default(50),
+    lastSyncedAt: timestamp("last_synced_at", { withTimezone: true }),
+    cursor: text("cursor"),
+    status: varchar("status", { length: 16 }).notNull().default("active"),
+  },
+  (table) => [uniqueIndex("index_upstreams_name_idx").on(table.name)]
 );
 
 // ── Shares ─────────────────────────────────────────────────────
@@ -71,6 +111,14 @@ export const shares = pgTable(
     indexedAt: timestamp("indexed_at", { withTimezone: true })
       .notNull()
       .defaultNow(),
+    viewCount: integer("view_count").notNull().default(0),
+    installCount: integer("install_count").notNull().default(0),
+    firstSeenAt: timestamp("first_seen_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    indexedBy: varchar("indexed_by", { length: 128 })
+      .notNull()
+      .default("shareful.ai"),
     searchVector: text("search_vector")
       .$type<unknown>()
       .default(sql`''::tsvector`),
@@ -156,6 +204,69 @@ export const verifications = pgTable(
       table.githubUser
     ),
     index("verifications_share_id_idx").on(table.shareId),
+  ]
+);
+
+// ── Leaderboard Entries ───────────────────────────────────────
+
+export const leaderboardEntries = pgTable(
+  "leaderboard_entries",
+  {
+    id: serial("id").primaryKey(),
+    username: varchar("username", { length: 128 }).notNull(),
+    period: varchar("period", { length: 32 }).notNull(),
+    score: integer("score").notNull().default(0),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (table) => [
+    uniqueIndex("leaderboard_entries_username_period_idx").on(
+      table.username,
+      table.period
+    ),
+    index("leaderboard_entries_period_score_idx").on(table.period, table.score),
+  ]
+);
+
+// ── Moderation Actions ───────────────────────────────────────
+
+export const moderationActions = pgTable(
+  "moderation_actions",
+  {
+    id: serial("id").primaryKey(),
+    targetType: varchar("target_type", { length: 16 }).notNull(),
+    targetId: integer("target_id").notNull(),
+    action: varchar("action", { length: 16 }).notNull(),
+    reason: text("reason"),
+    moderator: varchar("moderator", { length: 128 }).notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (table) => [
+    index("moderation_actions_target_idx").on(table.targetType, table.targetId),
+  ]
+);
+
+// ── Index Events ────────────────────────────────────────────
+
+export const indexEvents = pgTable(
+  "index_events",
+  {
+    id: serial("id").primaryKey(),
+    eventType: varchar("event_type", { length: 32 }).notNull(),
+    owner: varchar("owner", { length: 128 }).notNull(),
+    repo: varchar("repo", { length: 128 }).notNull(),
+    slug: varchar("slug", { length: 64 }),
+    metadata: jsonb("metadata"),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (table) => [
+    index("idx_index_events_created").on(table.createdAt),
+    index("idx_index_events_owner_repo").on(table.owner, table.repo),
   ]
 );
 

@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server";
-import { indexRepo } from "@/lib/indexer";
-import { isRegistered, registerRepo } from "@/lib/registry";
+import { enqueueIndexJob, isRegistered, registerRepo } from "@/lib/registry";
 
 export async function POST(request: Request) {
   try {
@@ -22,11 +21,10 @@ export async function POST(request: Request) {
       await registerRepo(owner, repo);
     }
 
-    const indexed = await indexRepo(owner, repo);
+    await enqueueIndexJob(owner, repo);
 
     return NextResponse.json({
-      message: `Indexed ${indexed} shares from ${owner}/${repo}`,
-      indexed,
+      message: `Queued indexing for ${owner}/${repo}`,
     });
   } catch (error) {
     console.error("Index error:", error);

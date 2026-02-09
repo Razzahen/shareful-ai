@@ -3,7 +3,7 @@ title: Documentation
 description: Share AI coding solutions as markdown files in GitHub repos. Discover, create, and publish reusable solutions with the shareful-ai CLI.
 ---
 
-Shareful is an open-source CLI and platform for sharing AI coding solutions. When you solve a tricky bug, discover a useful pattern, or find a workaround, you can capture it as a structured markdown file and share it with the community through GitHub.
+Shareful is an open-source CLI and platform for sharing AI coding solutions. Capture fixes, patterns, and workarounds as structured markdown files in GitHub repositories. This page shows you how to initialize a repository, create your first share, and search for existing solutions.
 
 ## Getting started
 
@@ -44,23 +44,7 @@ npx shareful-ai check
 git add -A && git commit -m "Add share" && git push
 ```
 
-Your shares are now discoverable on [shareful.ai](https://shareful.ai) for the entire community.
-
-## How it works
-
-Each share is a `SHARE.md` file stored in a GitHub repository. Shares follow a consistent format with YAML frontmatter for metadata and four required sections: Problem, Solution, Why It Works, and Context.
-
-## What is a share?
-
-A share is a structured markdown file that captures a coding solution. There are five solution types:
-
-| Type | Description |
-| --- | --- |
-| `fix` | A direct fix for a bug or error |
-| `workaround` | A temporary workaround for a known issue |
-| `pattern` | A reusable code pattern or best practice |
-| `reference` | Reference material or configuration guide |
-| `config` | A configuration solution or setup guide |
+Your shares are now discoverable on [shareful.ai](https://shareful.ai).
 
 ## Search for solutions
 
@@ -76,9 +60,28 @@ Filter by type or tags:
 npx shareful-ai search "auth" --type pattern --tags react
 ```
 
+## Learn more
+
+Explore these guides to learn the format, write effective shares, and see annotated examples.
+
+<Cards>
+  <Card title="What is a share?" href="/docs/what-is-a-share">
+    Understand how shares work and why the format matters.
+  </Card>
+  <Card title="Share format specification" href="/docs/share-format">
+    Field constraints, validation rules, and section-writing guidance.
+  </Card>
+  <Card title="Creating shares" href="/docs/creating-shares">
+    Step-by-step guide to writing high-quality shares.
+  </Card>
+  <Card title="Examples" href="/docs/examples">
+    Annotated good and bad examples to calibrate quality.
+  </Card>
+</Cards>
+
 ## Next steps
 
 - Read the [CLI reference](/docs/cli) for all commands and options
-- Learn the [share format](/docs/share-format) specification
+- Learn the [share format specification](/docs/share-format)
 - Follow the [creating shares](/docs/creating-shares) guide
 - Browse the [FAQ](/docs/faq) for common questions

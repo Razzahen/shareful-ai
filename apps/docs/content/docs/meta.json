@@ -2,10 +2,12 @@
   "title": "Documentation",
   "pages": [
     "index",
-    "cli",
+    "what-is-a-share",
     "share-format",
     "creating-shares",
+    "examples",
     "finding-shares",
+    "cli",
     "configuration",
     "faq"
   ]

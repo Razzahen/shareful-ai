@@ -3,7 +3,7 @@ title: Frequently asked questions
 description: Common questions about Shareful, the CLI, shares, and the platform.
 ---
 
-Answers to common questions about Shareful, shares, the CLI, and the platform.
+Find answers to common questions about creating shares, using the CLI, publishing, validation, and telemetry. If your question isn't covered here, [open an issue on GitHub](https://github.com/shareful-ai/shareful-ai).
 
 ## What is Shareful?
 
@@ -11,7 +11,7 @@ Shareful is an open-source platform for sharing AI coding solutions. Developers 
 
 ## What is a share?
 
-A share is a `SHARE.md` file that captures a coding solution. Each share has YAML frontmatter with metadata (title, tags, problem description, solution type) and four required body sections: Problem, Solution, Why It Works, and Context. See the [share format](/docs/share-format) specification for details.
+A share is a `SHARE.md` file that captures a coding solution with YAML frontmatter and four required body sections. See [What is a share?](/docs/what-is-a-share) for a full explanation of how shares work and why the format matters.
 
 ## How do I install the CLI?
 
@@ -78,7 +78,7 @@ Run `npx shareful-ai search <query>` to search across all published shares on sh
 
 ## Is any personal data collected?
 
-No. The CLI collects anonymous telemetry that tracks aggregate actions (`share`, `init-repo`, `check`, `add-skills`) without any personal information, IP addresses, or device identifiers. You can opt out by setting `DISABLE_TELEMETRY=1` or `DO_NOT_TRACK=1`.
+No. The CLI collects anonymous telemetry that tracks aggregate actions (`share`, `init`, `check`, `add-skills`) without any personal information, IP addresses, or device identifiers. You can opt out by setting `DISABLE_TELEMETRY=1` or `DO_NOT_TRACK=1`.
 
 ## Can I opt out of telemetry?
 
@@ -113,6 +113,16 @@ The CLI stores user settings at `~/.shareful/config.json`. See [configuration](/
 
 Node.js 18 or later is required.
 
+## Where can I see example shares?
+
+The [examples](/docs/examples) page has annotated good and bad shares with commentary explaining what makes each effective or problematic. It also includes a quality checklist to run through before publishing.
+
 ## How do I report a bug?
 
-Open an issue on the [GitHub repository](https://github.com/shareful-ai/shareful).
+Open an issue on the [GitHub repository](https://github.com/shareful-ai/shareful-ai).
+
+## Next steps
+
+- Read [What is a share?](/docs/what-is-a-share) for a full explanation of how shares work
+- Follow the [creating shares](/docs/creating-shares) guide to write your first share
+- See the [share format specification](/docs/share-format) for field constraints and validation rules

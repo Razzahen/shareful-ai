@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { manifestExists } from "@/lib/github";
+import { discoverShareSlugs } from "@/lib/github";
 import { indexRepo } from "@/lib/indexer";
 import { listRepos, registerRepo } from "@/lib/registry";
 
@@ -31,12 +31,11 @@ export async function POST(request: Request) {
 
     const [owner, repo] = parts;
 
-    // Validate shareful.json exists
-    const hasManifest = await manifestExists(owner, repo);
-    if (!hasManifest) {
+    const slugs = await discoverShareSlugs(owner, repo);
+    if (slugs.length === 0) {
       return NextResponse.json(
         {
-          error: `No shareful.json found in ${owner}/${repo}. Run 'npx shareful-ai create' first.`,
+          error: `No shares found in ${owner}/${repo}. Create shares in shares/*/SHARE.md.`,
         },
         { status: 400 }
       );

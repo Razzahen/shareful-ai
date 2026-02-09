@@ -7,7 +7,7 @@ vi.mock("@/lib/registry", () => ({
 }));
 
 vi.mock("@/lib/github", () => ({
-  manifestExists: vi.fn(),
+  discoverShareSlugs: vi.fn(),
 }));
 
 vi.mock("@/lib/indexer", () => ({
@@ -15,13 +15,13 @@ vi.mock("@/lib/indexer", () => ({
 }));
 
 import { GET, POST } from "@/app/api/registry/route";
-import { manifestExists } from "@/lib/github";
+import { discoverShareSlugs } from "@/lib/github";
 import { indexRepo } from "@/lib/indexer";
 import { listRepos, registerRepo } from "@/lib/registry";
 
 const mockListRepos = vi.mocked(listRepos);
 const mockRegisterRepo = vi.mocked(registerRepo);
-const mockManifestExists = vi.mocked(manifestExists);
+const mockDiscoverShareSlugs = vi.mocked(discoverShareSlugs);
 const mockIndexRepo = vi.mocked(indexRepo);
 
 const URL = "http://localhost/api/registry";
@@ -90,22 +90,22 @@ describe("POST /api/registry", () => {
     });
   });
 
-  describe("manifest check", () => {
-    it("returns 400 when manifest does not exist", async () => {
-      mockManifestExists.mockResolvedValue(false);
+  describe("share discovery check", () => {
+    it("returns 400 when no shares are found", async () => {
+      mockDiscoverShareSlugs.mockResolvedValue([]);
 
       const { status, body } = await parseResponse(
         await POST(jsonRequest(URL, { repo: "alice/shares" }))
       );
 
       expect(status).toBe(400);
-      expect(body.error).toContain("shareful.json");
+      expect(body.error).toContain("No shares found");
     });
   });
 
   describe("success", () => {
     it("returns 200 with registered repo and indexed count", async () => {
-      mockManifestExists.mockResolvedValue(true);
+      mockDiscoverShareSlugs.mockResolvedValue(["fix-1", "fix-2", "fix-3"]);
       mockRegisterRepo.mockResolvedValue({
         owner: "alice",
         repo: "shares",
@@ -127,7 +127,7 @@ describe("POST /api/registry", () => {
 
   describe("errors", () => {
     it("returns 500 when registerRepo throws", async () => {
-      mockManifestExists.mockResolvedValue(true);
+      mockDiscoverShareSlugs.mockResolvedValue(["fix-1"]);
       mockRegisterRepo.mockRejectedValue(new Error("DB error"));
 
       const { status, body } = await parseResponse(

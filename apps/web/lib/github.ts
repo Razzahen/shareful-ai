@@ -1,6 +1,5 @@
-import type { ShareManifest } from "./types";
-
 const GITHUB_API = "https://api.github.com";
+const SHARE_PATH_RE = /^shares\/([^/]+)\/SHARE\.md$/;
 
 function headers(): HeadersInit {
   const h: HeadersInit = {
@@ -13,20 +12,52 @@ function headers(): HeadersInit {
   return h;
 }
 
-export async function fetchManifest(
+export async function discoverShareSlugs(
   owner: string,
   repo: string
-): Promise<ShareManifest> {
-  const url = `${GITHUB_API}/repos/${owner}/${repo}/contents/shareful.json`;
+): Promise<string[]> {
+  const url = `${GITHUB_API}/repos/${owner}/${repo}/git/trees/HEAD?recursive=1`;
   const res = await fetch(url, { headers: headers() });
   if (!res.ok) {
-    throw new Error(
-      `Failed to fetch shareful.json from ${owner}/${repo}: ${res.status}`
-    );
+    return [];
   }
   const data = await res.json();
-  const content = Buffer.from(data.content, "base64").toString("utf-8");
-  return JSON.parse(content) as ShareManifest;
+  const slugs: string[] = [];
+  for (const item of data.tree) {
+    const match = item.path.match(SHARE_PATH_RE);
+    if (match) {
+      slugs.push(match[1]);
+    }
+  }
+  return slugs;
+}
+
+export async function fetchDefaultBranchSha(
+  owner: string,
+  repo: string
+): Promise<string | null> {
+  const url = `${GITHUB_API}/repos/${owner}/${repo}/commits/HEAD`;
+  const res = await fetch(url, {
+    headers: { ...headers(), Accept: "application/vnd.github.sha" },
+  });
+  if (!res.ok) {
+    return null;
+  }
+  return res.text();
+}
+
+export async function fetchFileContent(
+  owner: string,
+  repo: string,
+  path: string
+): Promise<string | null> {
+  const url = `${GITHUB_API}/repos/${owner}/${repo}/contents/${path}`;
+  const res = await fetch(url, { headers: headers() });
+  if (!res.ok) {
+    return null;
+  }
+  const data = await res.json();
+  return Buffer.from(data.content, "base64").toString("utf-8");
 }
 
 export async function fetchShareMd(
@@ -34,31 +65,15 @@ export async function fetchShareMd(
   repo: string,
   slug: string
 ): Promise<string> {
-  const url = `${GITHUB_API}/repos/${owner}/${repo}/contents/shares/${slug}/SHARE.md`;
-  const res = await fetch(url, { headers: headers() });
-  if (!res.ok) {
+  const content = await fetchFileContent(
+    owner,
+    repo,
+    `shares/${slug}/SHARE.md`
+  );
+  if (content === null) {
     throw new Error(
-      `Failed to fetch SHARE.md for ${slug} from ${owner}/${repo}: ${res.status}`
+      `Failed to fetch SHARE.md for ${slug} from ${owner}/${repo}`
     );
   }
-  const data = await res.json();
-  return Buffer.from(data.content, "base64").toString("utf-8");
-}
-
-export async function repoExists(
-  owner: string,
-  repo: string
-): Promise<boolean> {
-  const url = `${GITHUB_API}/repos/${owner}/${repo}`;
-  const res = await fetch(url, { headers: headers() });
-  return res.ok;
-}
-
-export async function manifestExists(
-  owner: string,
-  repo: string
-): Promise<boolean> {
-  const url = `${GITHUB_API}/repos/${owner}/${repo}/contents/shareful.json`;
-  const res = await fetch(url, { headers: headers() });
-  return res.ok;
+  return content;
 }

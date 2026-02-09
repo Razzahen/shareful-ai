@@ -1,6 +1,12 @@
 import { and, eq } from "drizzle-orm";
+import { logIndexEvent } from "./audit";
 import { db } from "./db";
-import { fetchManifest, fetchShareMd } from "./github";
+import {
+  discoverShareSlugs,
+  fetchDefaultBranchSha,
+  fetchShareMd,
+} from "./github";
+import { updateRepoSha } from "./registry";
 import { shares, shareTags, tags } from "./schema";
 import { parseShareMd } from "./share-parser";
 import type { Share } from "./types";
@@ -34,12 +40,12 @@ async function upsertTags(tagNames: string[]): Promise<number[]> {
 
 // biome-ignore lint/complexity/noExcessiveCognitiveComplexity: upsert logic is inherently sequential
 export async function indexRepo(owner: string, repo: string): Promise<number> {
-  const manifest = await fetchManifest(owner, repo);
+  const slugs = await discoverShareSlugs(owner, repo);
   let indexed = 0;
 
-  for (const entry of manifest.shares) {
+  for (const slug of slugs) {
     try {
-      const raw = await fetchShareMd(owner, repo, entry.slug);
+      const raw = await fetchShareMd(owner, repo, slug);
       const { frontmatter, content } = parseShareMd(raw);
 
       const [share] = await db
@@ -91,8 +97,20 @@ export async function indexRepo(owner: string, repo: string): Promise<number> {
 
       indexed++;
     } catch (e) {
-      console.error(`Failed to index ${entry.slug} from ${owner}/${repo}:`, e);
+      console.error(`Failed to index ${slug} from ${owner}/${repo}:`, e);
     }
+  }
+
+  const sha = await fetchDefaultBranchSha(owner, repo);
+  if (sha) {
+    await updateRepoSha(owner, repo, sha);
+  }
+
+  if (indexed > 0) {
+    await logIndexEvent("index", owner, repo, undefined, {
+      indexed,
+      slugs: slugs.length,
+    });
   }
 
   return indexed;
