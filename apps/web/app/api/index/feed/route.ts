@@ -1,4 +1,4 @@
-import { asc, eq, gt, sql } from "drizzle-orm";
+import { asc, eq, gt, inArray } from "drizzle-orm";
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { shares, shareTags, tags } from "@/lib/schema";
@@ -38,7 +38,7 @@ export async function GET(request: Request) {
       .select({ shareId: shareTags.shareId, tagName: tags.name })
       .from(shareTags)
       .innerJoin(tags, eq(tags.id, shareTags.tagId))
-      .where(sql`${shareTags.shareId} = ANY(${shareIds})`);
+      .where(inArray(shareTags.shareId, shareIds));
 
     for (const r of tagResults) {
       const existing = tagMap.get(r.shareId) ?? [];

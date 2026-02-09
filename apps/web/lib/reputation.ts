@@ -1,4 +1,4 @@
-import { and, desc, eq, sql } from "drizzle-orm";
+import { and, desc, eq, inArray, sql } from "drizzle-orm";
 import { db } from "./db";
 import { leaderboardEntries, outcomes, shares, verifications } from "./schema";
 import type { ContributorProfile, Reputation, ShareWithStats } from "./types";
@@ -22,14 +22,14 @@ async function recalculateReputation(username: string): Promise<Reputation> {
       totalFailure: sql<number>`COALESCE(cast(SUM(${outcomes.failureCount}) as int), 0)`,
     })
     .from(outcomes)
-    .where(sql`${outcomes.shareId} = ANY(${shareIds})`);
+    .where(inArray(outcomes.shareId, shareIds));
 
   const [verAgg] = await db
     .select({
       totalVerifications: sql<number>`cast(count(*) as int)`,
     })
     .from(verifications)
-    .where(sql`${verifications.shareId} = ANY(${shareIds})`);
+    .where(inArray(verifications.shareId, shareIds));
 
   const totalSuccess = outcomeAgg?.totalSuccess ?? 0;
   const totalOutcomes = totalSuccess + (outcomeAgg?.totalFailure ?? 0);

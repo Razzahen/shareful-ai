@@ -150,11 +150,14 @@ export async function searchShares(
   if (options?.tags && options.tags.length > 0) {
     const tagFilter = options.tags.map((t) => t.toLowerCase());
     conditions.push(
-      sql`${shares.id} IN (
-        SELECT ${shareTags.shareId} FROM ${shareTags}
-        INNER JOIN ${tags} ON ${tags.id} = ${shareTags.tagId}
-        WHERE ${tags.name} = ANY(${tagFilter})
-      )`
+      inArray(
+        shares.id,
+        db
+          .select({ shareId: shareTags.shareId })
+          .from(shareTags)
+          .innerJoin(tags, eq(tags.id, shareTags.tagId))
+          .where(inArray(tags.name, tagFilter))
+      )
     );
   }
 

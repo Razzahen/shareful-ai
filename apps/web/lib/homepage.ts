@@ -1,4 +1,4 @@
-import { desc, eq, gt, sql } from "drizzle-orm";
+import { desc, eq, gt, inArray, sql } from "drizzle-orm";
 import { db } from "./db";
 import { outcomes, shares, shareTags, tags } from "./schema";
 import type { SolutionType } from "./types";
@@ -33,7 +33,7 @@ async function getTagsForShareIds(
     .select({ shareId: shareTags.shareId, tagName: tags.name })
     .from(shareTags)
     .innerJoin(tags, eq(tags.id, shareTags.tagId))
-    .where(sql`${shareTags.shareId} = ANY(${shareIds})`);
+    .where(inArray(shareTags.shareId, shareIds));
 
   const map = new Map<number, string[]>();
   for (const r of results) {

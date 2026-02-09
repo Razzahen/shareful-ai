@@ -1,4 +1,4 @@
-import { desc, eq, type SQL, sql } from "drizzle-orm";
+import { desc, eq, inArray, type SQL, sql } from "drizzle-orm";
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { outcomes, shares, shareTags, tags, verifications } from "@/lib/schema";
@@ -70,11 +70,14 @@ function buildConditions(
   if (filterTags && filterTags.length > 0) {
     const tagFilter = filterTags.map((t) => t.toLowerCase());
     conditions.push(
-      sql`${shares.id} IN (
-        SELECT ${shareTags.shareId} FROM ${shareTags}
-        INNER JOIN ${tags} ON ${tags.id} = ${shareTags.tagId}
-        WHERE ${tags.name} = ANY(${tagFilter})
-      )`
+      inArray(
+        shares.id,
+        db
+          .select({ shareId: shareTags.shareId })
+          .from(shareTags)
+          .innerJoin(tags, eq(tags.id, shareTags.tagId))
+          .where(inArray(tags.name, tagFilter))
+      )
     );
   }
 
@@ -120,7 +123,7 @@ export async function GET(request: Request) {
         .select({ shareId: shareTags.shareId, tagName: tags.name })
         .from(shareTags)
         .innerJoin(tags, eq(tags.id, shareTags.tagId))
-        .where(sql`${shareTags.shareId} = ANY(${shareIds})`);
+        .where(inArray(shareTags.shareId, shareIds));
 
       for (const r of tagResults) {
         const existing = tagMap.get(r.shareId) ?? [];
