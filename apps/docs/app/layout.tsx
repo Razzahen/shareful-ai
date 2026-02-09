@@ -30,8 +30,12 @@ const apercu = localFont({
 
 export default function Layout({ children }: LayoutProps<"/">) {
   return (
-    <html lang="en" className={`${apercu.variable} font-sans`} suppressHydrationWarning>
-      <body className="flex flex-col min-h-screen">
+    <html
+      className={`${apercu.variable} font-sans`}
+      lang="en"
+      suppressHydrationWarning
+    >
+      <body className="flex min-h-screen flex-col">
         <RootProvider search={{ options: { api: "/docs/api/search" } }}>
           {children}
         </RootProvider>

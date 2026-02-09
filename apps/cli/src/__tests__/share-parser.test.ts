@@ -82,7 +82,7 @@ describe("validateFrontmatter", () => {
 
   it("requires title", () => {
     const data = validFrontmatter();
-    delete (data as Record<string, unknown>).title;
+    (data as Record<string, unknown>).title = undefined;
     const errors = validateFrontmatter(data);
     expect(errors.some((e) => e.field === "title")).toBe(true);
   });
@@ -107,7 +107,7 @@ describe("validateFrontmatter", () => {
 
   it("requires slug", () => {
     const data = validFrontmatter();
-    delete (data as Record<string, unknown>).slug;
+    (data as Record<string, unknown>).slug = undefined;
     const errors = validateFrontmatter(data);
     expect(errors.some((e) => e.field === "slug")).toBe(true);
   });
@@ -132,7 +132,7 @@ describe("validateFrontmatter", () => {
 
   it("requires tags", () => {
     const data = validFrontmatter();
-    delete (data as Record<string, unknown>).tags;
+    (data as Record<string, unknown>).tags = undefined;
     const errors = validateFrontmatter(data);
     expect(errors.some((e) => e.field === "tags")).toBe(true);
   });
@@ -178,7 +178,7 @@ describe("validateFrontmatter", () => {
 
   it("requires problem", () => {
     const data = validFrontmatter();
-    delete (data as Record<string, unknown>).problem;
+    (data as Record<string, unknown>).problem = undefined;
     const errors = validateFrontmatter(data);
     expect(errors.some((e) => e.field === "problem")).toBe(true);
   });
@@ -191,7 +191,7 @@ describe("validateFrontmatter", () => {
 
   it("requires solution_type", () => {
     const data = validFrontmatter();
-    delete (data as Record<string, unknown>).solution_type;
+    (data as Record<string, unknown>).solution_type = undefined;
     const errors = validateFrontmatter(data);
     expect(errors.some((e) => e.field === "solution_type")).toBe(true);
   });
