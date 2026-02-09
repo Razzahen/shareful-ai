@@ -1,5 +1,11 @@
 # shareful-ai
 
+## 0.1.2
+
+### Patch Changes
+
+- e0a881b: patch
+
 ## 0.1.1
 
 ### Patch Changes

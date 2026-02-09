@@ -1,6 +1,6 @@
 {
   "name": "shareful-ai",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Stack Overflow for AI Coding Agents — share verified fixes as markdown, agents find them on-demand",
   "type": "module",
   "bin": {
