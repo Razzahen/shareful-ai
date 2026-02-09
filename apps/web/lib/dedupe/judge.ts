@@ -83,9 +83,13 @@ function formatCandidates(
 
 function problemSystemPrompt(): string {
   return [
-    "You are an extremely strict deduplication judge for Shareful.",
+    "You are a deduplication judge for Shareful.",
     "",
     "Goal: decide if the NEW problem is an exact replica of ONE existing problem candidate.",
+    "",
+    "Important:",
+    "- Candidates are canonicalized; they may describe a representative instance of an underlying issue.",
+    "- Return 'same' only when the underlying root-cause mechanism AND fix strategy are the same.",
     "",
     "Definition of EXACT REPLICA (must satisfy all):",
     "- Same language/runtime that determines the fix (e.g., Node vs Python; TS vs Go).",
@@ -94,7 +98,10 @@ function problemSystemPrompt(): string {
     "- Same root-cause mechanism (causal chain), not just similar symptoms.",
     "- Same fix applicability: at least one existing solution for that candidate would work for the new case with only superficial edits.",
     "",
-    "If you are not confident the invariants match, DO NOT merge. Prefer 'new'.",
+    "Decision rules:",
+    "- If exactly ONE candidate satisfies the definition, return decision='same' with that match_id.",
+    "- If NONE satisfy it, return decision='new'.",
+    "- If MULTIPLE could satisfy it or you are unsure, return decision='new'.",
     "",
     "Output JSON ONLY with shape:",
     '{ "decision": "same" | "new", "match_id": number|null, "confidence": number, "rationale": string }',
@@ -273,7 +280,7 @@ export function createConfiguredJudge(): DedupeJudge {
         invoke: (j, callArgs) => j.judgeProblemMatch(callArgs),
       });
 
-      const matchDistance = getMatchDistance({
+      const matchInfo = getMatchDistanceInfo({
         decision: primary.decision,
         candidates: args.candidates,
       });
@@ -284,8 +291,9 @@ export function createConfiguredJudge(): DedupeJudge {
         args,
         primary,
         confirmMerges,
-        matchDistance,
+        matchInfo,
         autoAcceptMaxDistance: tuning.problem.acceptUnconfirmedMaxDistance,
+        autoAcceptMargin: tuning.problem.judgeAutoAcceptMargin,
         invoke: (j, callArgs) => j.judgeProblemMatch(callArgs),
       });
     },
@@ -298,7 +306,7 @@ export function createConfiguredJudge(): DedupeJudge {
         invoke: (j, callArgs) => j.judgeSolutionMatch(callArgs),
       });
 
-      const matchDistance = getMatchDistance({
+      const matchInfo = getMatchDistanceInfo({
         decision: primary.decision,
         candidates: args.candidates,
       });
@@ -309,8 +317,9 @@ export function createConfiguredJudge(): DedupeJudge {
         args,
         primary,
         confirmMerges,
-        matchDistance,
+        matchInfo,
         autoAcceptMaxDistance: tuning.solution.acceptUnconfirmedMaxDistance,
+        autoAcceptMargin: tuning.solution.judgeAutoAcceptMargin,
         invoke: (j, callArgs) => j.judgeSolutionMatch(callArgs),
       });
     },
@@ -356,8 +365,13 @@ async function confirmPrimaryDecision<TArgs>(args: {
   args: TArgs;
   primary: { decision: MatchDecision; provider: string; index: number };
   confirmMerges: boolean;
-  matchDistance: number | null;
+  matchInfo: {
+    matchDistance: number | null;
+    isNearest: boolean;
+    marginToSecondBest: number | null;
+  };
   autoAcceptMaxDistance: number;
+  autoAcceptMargin: number;
   invoke: (judge: DedupeJudge, callArgs: TArgs) => Promise<MatchDecision>;
 }): Promise<MatchDecision> {
   const primaryDecision = args.primary.decision;
@@ -373,8 +387,11 @@ async function confirmPrimaryDecision<TArgs>(args: {
   // If the match is extremely close, accept the primary decision without paying the
   // latency/cost of a second model.
   if (
-    typeof args.matchDistance === "number" &&
-    args.matchDistance <= args.autoAcceptMaxDistance
+    typeof args.matchInfo.matchDistance === "number" &&
+    args.matchInfo.matchDistance <= args.autoAcceptMaxDistance &&
+    args.matchInfo.isNearest &&
+    typeof args.matchInfo.marginToSecondBest === "number" &&
+    args.matchInfo.marginToSecondBest >= args.autoAcceptMargin
   ) {
     return primaryDecision;
   }
@@ -432,19 +449,47 @@ async function confirmPrimaryDecision<TArgs>(args: {
   };
 }
 
-function getMatchDistance(args: {
+function getMatchDistanceInfo(args: {
   decision: MatchDecision;
   candidates: Array<{ id: number; distance: number }>;
-}): number | null {
+}): {
+  matchDistance: number | null;
+  isNearest: boolean;
+  marginToSecondBest: number | null;
+} {
   if (!(args.decision.decision === "same" && args.decision.matchId !== null)) {
-    return null;
+    return { matchDistance: null, isNearest: false, marginToSecondBest: null };
   }
 
   const distance = args.candidates.find(
     (c) => c.id === args.decision.matchId
   )?.distance;
 
-  return typeof distance === "number" ? distance : null;
+  const matchDistance = typeof distance === "number" ? distance : null;
+
+  // Compute nearest + 2nd nearest distances, independent of model matchId choice.
+  const sorted = [...args.candidates].sort((a, b) => a.distance - b.distance);
+  const nearest = sorted[0];
+  const second = sorted[1];
+
+  const nearestDistance =
+    typeof nearest?.distance === "number" ? nearest.distance : null;
+  const secondDistance =
+    typeof second?.distance === "number" ? second.distance : null;
+
+  const isNearest = Boolean(nearest) && nearest.id === args.decision.matchId;
+
+  const marginToSecondBest =
+    matchDistance !== null && secondDistance !== null
+      ? secondDistance - matchDistance
+      : null;
+
+  // If the match isn't the nearest, treat margin as unknown; don't auto-accept.
+  return {
+    matchDistance,
+    isNearest: isNearest && nearestDistance !== null,
+    marginToSecondBest: isNearest ? marginToSecondBest : null,
+  };
 }
 
 function assertNeverProvider(value: never): never {

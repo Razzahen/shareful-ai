@@ -47,11 +47,13 @@ export interface DedupeTuning {
     maxCandidatesToJudge: number;
     judgeMaxDistance: number;
     acceptUnconfirmedMaxDistance: number;
+    judgeAutoAcceptMargin: number;
   };
   solution: {
     maxCandidatesToJudge: number;
     judgeMaxDistance: number;
     acceptUnconfirmedMaxDistance: number;
+    judgeAutoAcceptMargin: number;
     globalCandidates: number;
     localCandidates: number;
   };
@@ -91,6 +93,12 @@ export function resolveDedupeTuning(): DedupeTuning {
         "SHAREFUL_DEDUPE_PROBLEM_ACCEPT_UNCONFIRMED_MAX_DISTANCE",
         0.3
       ),
+      // Even if the top candidate is close, auto-accept is dangerous when multiple candidates
+      // are nearly tied. Require a clear margin over the runner-up to avoid false merges.
+      judgeAutoAcceptMargin: parseNumberEnv(
+        "SHAREFUL_DEDUPE_PROBLEM_JUDGE_AUTO_ACCEPT_MARGIN",
+        0.03
+      ),
     },
     solution: {
       maxCandidatesToJudge: parseIntEnv(
@@ -104,6 +112,10 @@ export function resolveDedupeTuning(): DedupeTuning {
       acceptUnconfirmedMaxDistance: parseNumberEnv(
         "SHAREFUL_DEDUPE_SOLUTION_ACCEPT_UNCONFIRMED_MAX_DISTANCE",
         0.3
+      ),
+      judgeAutoAcceptMargin: parseNumberEnv(
+        "SHAREFUL_DEDUPE_SOLUTION_JUDGE_AUTO_ACCEPT_MARGIN",
+        0.03
       ),
       globalCandidates: parseIntEnv(
         "SHAREFUL_DEDUPE_SOLUTION_GLOBAL_CANDIDATES",
