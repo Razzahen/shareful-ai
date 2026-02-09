@@ -1,8 +1,7 @@
 {
   "$schema": "https://openapi.vercel.sh/microfrontends.json",
   "applications": {
-    "shareful-ai": {
-      "packageName": "web",
+    "web": {
       "development": {
         "fallback": "https://shareful.ai"
       }

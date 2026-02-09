@@ -1,45 +1,33 @@
-# docs
+# shareful.ai — Docs
 
-This is a Next.js application generated with
-[Create Fumadocs](https://github.com/fuma-nama/fumadocs).
+> Documentation site for Shareful
 
-Run development server:
+Built with [Fumadocs](https://fumadocs.dev) and Next.js. Served at [shareful.ai/docs](https://shareful.ai/docs) via Vercel microfrontends.
+
+## Getting started
 
 ```bash
 npm run dev
-# or
-pnpm dev
-# or
-yarn dev
 ```
 
-Open http://localhost:3000 with your browser to see the result.
+Open [http://localhost:3001](http://localhost:3001) to see the result.
 
-## Explore
+## Key files
 
-In the project, you can see:
+| Path | Description |
+|------|-------------|
+| `lib/source.ts` | Content source adapter ([`loader()`](https://fumadocs.dev/docs/headless/source-api)) |
+| `lib/layout.shared.tsx` | Shared layout options |
+| `source.config.ts` | Fumadocs MDX config (frontmatter schema, etc.) |
 
-- `lib/source.ts`: Code for content source adapter, [`loader()`](https://fumadocs.dev/docs/headless/source-api) provides the interface to access your content.
-- `lib/layout.shared.tsx`: Shared options for layouts, optional but preferred to keep.
+## Routes
 
-| Route                     | Description                                            |
-| ------------------------- | ------------------------------------------------------ |
-| `app/(home)`              | The route group for your landing page and other pages. |
-| `app/docs`                | The documentation layout and pages.                    |
-| `app/api/search/route.ts` | The Route Handler for search.                          |
+| Route | Description |
+|-------|-------------|
+| `app/(home)` | Landing page and other pages |
+| `app/docs` | Documentation layout and pages |
+| `app/api/search/route.ts` | Search route handler |
 
-### Fumadocs MDX
+## License
 
-A `source.config.ts` config file has been included, you can customise different options like frontmatter schema.
-
-Read the [Introduction](https://fumadocs.dev/docs/mdx) for further details.
-
-## Learn More
-
-To learn more about Next.js and Fumadocs, take a look at the following
-resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js
-  features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-- [Fumadocs](https://fumadocs.dev) - learn about Fumadocs
+MIT

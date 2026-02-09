@@ -7,7 +7,7 @@ Answers to common questions about Shareful, shares, the CLI, and the platform.
 
 ## What is Shareful?
 
-Shareful is an open-source platform for sharing AI coding solutions. Developers capture solutions as structured markdown files (`SHARE.md`) in GitHub repositories. The `shareful-ai` CLI handles creation, validation, publishing, and search.
+Shareful is an open-source platform for sharing AI coding solutions. Developers capture solutions as structured markdown files (`SHARE.md`) in GitHub repositories. The `shareful-ai` CLI handles creation, validation, and search.
 
 ## What is a share?
 
@@ -32,14 +32,31 @@ npm install -g shareful-ai
 Run `npx shareful-ai create` for interactive mode, or pass flags directly:
 
 ```bash
-npx shareful-ai create --title "Fix auth redirect loop" --tags "auth,nextjs" --type fix
+npx shareful-ai create \
+  --title "Fix auth redirect loop" \
+  --problem "Login page redirects back to itself after successful auth" \
+  --tags "auth,nextjs" \
+  --type fix
 ```
 
 See the [creating shares](/docs/creating-shares) guide for a full walkthrough.
 
 ## How do I publish my shares?
 
-Run `npx shareful-ai publish` from your shares repository. This validates your shares, commits them to Git, pushes to GitHub, and notifies the Shareful indexer. See [publishing](/docs/publishing) for details.
+Validate your shares with `npx shareful-ai check`, then push to GitHub:
+
+```bash
+npx shareful-ai check
+git add -A && git commit -m "Add share" && git push
+```
+
+## How do I validate my shares?
+
+Run `npx shareful-ai check` to validate all `SHARE.md` files in the current repository. The CLI checks frontmatter fields, body sections, and slug-directory alignment. It exits with code 1 if any share fails.
+
+## How do I install agent skills?
+
+Run `npx shareful-ai skills` to install Shareful agent skills globally. These work with Claude Code, Cursor, Windsurf, and other AI coding agents.
 
 ## What are the five solution types?
 
@@ -57,11 +74,11 @@ Shareful provides agent skills for AI coding agents. The `create-share` skill gu
 
 ## How does search work?
 
-Run `npx shareful-ai find <query>` to search across all published shares on shareful.ai. You can filter by solution type and tags. See [finding shares](/docs/finding-shares) for examples.
+Run `npx shareful-ai search <query>` to search across all published shares on shareful.ai. You can filter by solution type and tags. See [finding shares](/docs/finding-shares) for examples.
 
 ## Is any personal data collected?
 
-No. The CLI collects anonymous telemetry that tracks aggregate actions (create, publish, init, find) without any personal information, IP addresses, or device identifiers. You can opt out by setting `DISABLE_TELEMETRY=1` or `DO_NOT_TRACK=1`.
+No. The CLI collects anonymous telemetry that tracks aggregate actions (`share`, `init-repo`, `check`, `add-skills`) without any personal information, IP addresses, or device identifiers. You can opt out by setting `DISABLE_TELEMETRY=1` or `DO_NOT_TRACK=1`.
 
 ## Can I opt out of telemetry?
 
@@ -77,7 +94,7 @@ See [configuration](/docs/configuration) for more details.
 
 ## What are the validation rules?
 
-The CLI validates shares before publishing:
+The CLI validates shares when you run `npx shareful-ai check`:
 
 - Title: required, max 128 characters
 - Slug: required, max 64 characters, lowercase alphanumeric with hyphens
@@ -90,7 +107,7 @@ See the [share format](/docs/share-format) specification for the complete rules.
 
 ## Where is user configuration stored?
 
-The CLI stores user settings at `~/.config/shareful/config.json`. See [configuration](/docs/configuration) for all options.
+The CLI stores user settings at `~/.shareful/config.json`. See [configuration](/docs/configuration) for all options.
 
 ## What Node.js version do I need?
 

@@ -23,13 +23,15 @@ npx shareful-ai init [name]
 
 | Argument | Description |
 | --- | --- |
-| `name` | Directory name for the repository (optional, defaults to current directory) |
+| `name` | Directory name for the repository (optional, prompts interactively if omitted) |
 
 **What it creates:**
 
-- A `shares/` directory for your `SHARE.md` files
-- A `shareful.json` manifest file
+- A `shares/` directory with an example share
 - A `.gitignore` file
+- A `README.md` with setup instructions
+- An `AGENTS.md` with repository documentation
+- A git repository
 
 **Example:**
 
@@ -47,8 +49,6 @@ Create a new `SHARE.md` file. Runs interactively when called without flags, or a
 ```bash
 npx shareful-ai create [options]
 ```
-
-**Aliases:** `new`
 
 **Options:**
 
@@ -69,6 +69,8 @@ The CLI walks you through each field with prompts and validation.
 
 **Non-interactive mode:**
 
+Provide all four flags to skip prompts:
+
 ```bash
 npx shareful-ai create \
   --title "Fix Prisma connection pool exhaustion" \
@@ -83,94 +85,92 @@ Creates a `shares/<slug>/SHARE.md` file with YAML frontmatter and section templa
 
 ---
 
-### `publish`
-
-Validate all shares, commit changes, push to GitHub, and notify the Shareful indexer.
-
-```bash
-npx shareful-ai publish
-```
-
-**Aliases:** `push`
-
-**What it does:**
-
-1. Scans the `shares/` directory for `SHARE.md` files
-2. Validates each share against the [format specification](/docs/share-format)
-3. Updates the `shareful.json` manifest
-4. Runs `git add`, `git commit`, and `git push`
-5. Sends the manifest to the Shareful indexer at `https://shareful.ai/api/index`
-
-**Requirements:**
-
-- Must be run from within a Git repository
-- Repository must have a configured remote
-
----
-
-### `list`
-
-List all shares in the current repository.
-
-```bash
-npx shareful-ai list
-```
-
-**Aliases:** `ls`
-
-**Output:**
-
-Displays each share's title, solution type, tags, and file path.
-
----
-
-### `find`
+### `search`
 
 Search shareful.ai for community solutions.
 
 ```bash
-npx shareful-ai find <query> [options]
+npx shareful-ai search <query> [options]
 ```
 
 **Arguments:**
 
 | Argument | Description |
 | --- | --- |
-| `query` | Search query string |
+| `query` | Search query string (required) |
 
 **Options:**
 
-| Flag | Description |
-| --- | --- |
-| `--type <type>` | Filter by solution type |
-| `--tags <tags>` | Filter by tags |
-| `--limit <n>` | Maximum number of results |
+| Flag | Description | Default |
+| --- | --- | --- |
+| `--type <type>` | Filter by solution type | All types |
+| `--tags <tags>` | Filter by tags (comma-separated) | No filter |
+| `--limit <n>` | Maximum number of results | 5 |
 
 **Examples:**
 
 ```bash
 # Search for React hydration fixes
-npx shareful-ai find "hydration mismatch"
+npx shareful-ai search "hydration mismatch"
 
 # Search for authentication patterns
-npx shareful-ai find "auth" --type pattern
+npx shareful-ai search "auth" --type pattern
 
 # Search with tag filter
-npx shareful-ai find "database" --tags prisma,postgres --limit 5
+npx shareful-ai search "database" --tags prisma,postgres --limit 3
 ```
 
 ---
 
-### `help`
+### `check`
+
+Validate all `SHARE.md` files in the current repository.
+
+```bash
+npx shareful-ai check
+```
+
+Scans every `shares/*/SHARE.md` file and validates:
+
+- All required frontmatter fields are present and within limits
+- The slug matches the parent directory name
+- All four required body sections exist (`## Problem`, `## Solution`, `## Why It Works`, `## Context`)
+
+Displays each share with a `+` (valid) or `x` (error) indicator. Exits with code 1 if any share fails validation.
+
+**Example output:**
+
+```
+  + fix-nextjs-hydration
+  + prisma-connection-pooling
+  x broken-share/SHARE.md - missing required field: tags
+
+2 valid, 1 error(s)
+```
+
+---
+
+### `skills`
+
+Install Shareful agent skills globally for AI coding agents.
+
+```bash
+npx shareful-ai skills
+```
+
+Runs `npx skills add shareful-ai/skills --all -g` to install skills that work with Claude Code, Cursor, Windsurf, and other agents.
+
+---
+
+### `--help`
 
 Display help information.
 
 ```bash
-npx shareful-ai help
 npx shareful-ai --help
 ```
 
-### `version`
+### `--version`
 
 Display the current version.
 
@@ -180,7 +180,16 @@ npx shareful-ai --version
 
 ## Telemetry
 
-The CLI collects anonymous telemetry to improve the platform. Events tracked include `create`, `publish`, `init`, and `find` actions with aggregate metadata (no personal information).
+The CLI collects anonymous telemetry to improve the platform. No personal information, IP addresses, or device identifiers are collected.
+
+**Events tracked:**
+
+| Event | Data |
+| --- | --- |
+| `share` | Share slug, share count |
+| `init-repo` | Repository name |
+| `check` | Valid count, error count |
+| `add-skills` | None |
 
 To opt out, set either environment variable:
 

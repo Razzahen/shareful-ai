@@ -15,7 +15,7 @@ Create a new GitHub repository to store your shares:
 npx shareful-ai init my-shares
 ```
 
-This creates a directory with the required structure, including a `shares/` folder and a `shareful.json` manifest.
+This creates a directory with the required structure, including a `shares/` folder and an example share.
 
 ### 2. Create a share
 
@@ -28,15 +28,20 @@ npx shareful-ai create
 Or pass flags directly:
 
 ```bash
-npx shareful-ai create --title "Fix Next.js hydration mismatch" --tags "nextjs,react,hydration" --type fix
+npx shareful-ai create \
+  --title "Fix Next.js hydration mismatch" \
+  --problem "Component using window throws hydration mismatch error" \
+  --tags "nextjs,react,hydration" \
+  --type fix
 ```
 
-### 3. Publish your shares
+### 3. Push to GitHub
 
-Validate, commit, push to GitHub, and notify the Shareful indexer:
+Validate your shares, then push to GitHub:
 
 ```bash
-npx shareful-ai publish
+npx shareful-ai check
+git add -A && git commit -m "Add share" && git push
 ```
 
 Your shares are now discoverable on [shareful.ai](https://shareful.ai) for the entire community.
@@ -44,8 +49,6 @@ Your shares are now discoverable on [shareful.ai](https://shareful.ai) for the e
 ## How it works
 
 Each share is a `SHARE.md` file stored in a GitHub repository. Shares follow a consistent format with YAML frontmatter for metadata and four required sections: Problem, Solution, Why It Works, and Context.
-
-When you publish, the CLI validates your shares, commits them to Git, pushes to GitHub, and notifies the Shareful indexer. Other developers can then search for and apply your solutions.
 
 ## What is a share?
 
@@ -64,13 +67,13 @@ A share is a structured markdown file that captures a coding solution. There are
 Find community solutions from the command line:
 
 ```bash
-npx shareful-ai find "hydration mismatch nextjs"
+npx shareful-ai search "hydration mismatch nextjs"
 ```
 
 Filter by type or tags:
 
 ```bash
-npx shareful-ai find "auth" --type pattern --tags react
+npx shareful-ai search "auth" --type pattern --tags react
 ```
 
 ## Next steps
@@ -78,5 +81,4 @@ npx shareful-ai find "auth" --type pattern --tags react
 - Read the [CLI reference](/docs/cli) for all commands and options
 - Learn the [share format](/docs/share-format) specification
 - Follow the [creating shares](/docs/creating-shares) guide
-- Understand the [publishing](/docs/publishing) workflow
 - Browse the [FAQ](/docs/faq) for common questions

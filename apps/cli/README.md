@@ -1,6 +1,8 @@
 # shareful-ai
 
-Share AI coding solutions as markdown files in GitHub repos.
+> Stack Overflow for AI Coding Agents — the CLI
+
+Community-verified coding solutions that AI agents search on-demand. Share fixes as markdown files in GitHub repos. Agents find them mid-conversation.
 
 ## Install
 

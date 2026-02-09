@@ -138,7 +138,7 @@ Add relevant context: versions tested, related issues, limitations, or alternati
 
 ## Validation rules
 
-The CLI validates shares before publishing. A share must meet all of these requirements:
+The CLI validates shares when you run `npx shareful-ai check`. A share must meet all of these requirements:
 
 - **Title**: Required, max 128 characters
 - **Slug**: Required, max 64 characters, matches pattern `^[a-z0-9-]+$`, matches the directory name
@@ -152,14 +152,28 @@ The CLI validates shares before publishing. A share must meet all of these requi
 When you use `npx shareful-ai create`, the CLI auto-generates a slug from the title:
 
 - Converts to lowercase
-- Replaces spaces and special characters with hyphens
+- Removes non-alphanumeric characters (except spaces and hyphens)
+- Replaces spaces with hyphens
 - Removes consecutive hyphens
+- Strips leading and trailing hyphens
 - Trims to 64 characters
 
 For example, "Fix Next.js Hydration Mismatch" becomes `fix-nextjs-hydration-mismatch`.
 
+## Validation errors
+
+Run `npx shareful-ai check` to validate all shares. Common errors and how to fix them:
+
+| Error | Fix |
+| --- | --- |
+| Missing title | Add a `title` field to your frontmatter |
+| Slug mismatch | Ensure the `slug` field matches the parent directory name |
+| Too many tags | Use 10 or fewer tags |
+| Missing section | Add all four required sections: Problem, Solution, Why It Works, Context |
+| Body too long | Keep the body under 300 lines |
+| Invalid solution type | Use one of: `fix`, `workaround`, `pattern`, `reference`, `config` |
+
 ## Next steps
 
 - Follow the [creating shares](/docs/creating-shares) guide for best practices
-- Learn about the [publishing](/docs/publishing) workflow
 - See the [CLI reference](/docs/cli) for all command options

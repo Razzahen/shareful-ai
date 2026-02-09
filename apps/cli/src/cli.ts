@@ -3,7 +3,9 @@
 import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
+import { runAddSkills } from "./add-skills.ts";
 import { runCheck } from "./check.ts";
+import { runCreate } from "./create.ts";
 import { runInitRepo } from "./init-repo.ts";
 import { runSearch } from "./search.ts";
 import { setVersion } from "./telemetry.ts";
@@ -70,6 +72,9 @@ function showBanner(): void {
   console.log(
     `  ${DIM}$${RESET} ${TEXT}npx shareful-ai check${RESET}            ${DIM}Validate shares${RESET}`
   );
+  console.log(
+    `  ${DIM}$${RESET} ${TEXT}npx shareful-ai skills${RESET}           ${DIM}Install agent skills${RESET}`
+  );
   console.log();
   console.log(`Discover shares at ${TEXT}https://shareful.ai/${RESET}`);
   console.log();
@@ -84,6 +89,7 @@ ${BOLD}Commands:${RESET}
   create              Create a new SHARE.md interactively
   search <query>      Search shareful.ai for shared solutions
   check               Validate all SHARE.md files
+  skills              Install agent skills globally
 
 ${BOLD}Create Options:${RESET}
   -t, --title <title>       Share title
@@ -101,6 +107,7 @@ ${BOLD}Examples:${RESET}
   ${DIM}$${RESET} shareful-ai create -t "Fix hydration error" --tags "nextjs,react" --type fix -p "Hydration mismatch"
   ${DIM}$${RESET} shareful-ai search "hydration error"
   ${DIM}$${RESET} shareful-ai check
+  ${DIM}$${RESET} shareful-ai skills
 
 Discover shares at ${TEXT}https://shareful.ai/${RESET}
 `);
@@ -133,6 +140,11 @@ async function main(): Promise<void> {
       showLogo();
       console.log();
       await runSearch(restArgs);
+      break;
+    case "skills":
+      showLogo();
+      console.log();
+      await runAddSkills();
       break;
     case "check":
     case "validate":

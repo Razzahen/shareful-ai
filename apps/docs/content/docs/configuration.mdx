@@ -1,33 +1,33 @@
 ---
 title: Configuration
-description: Configure the shareful-ai CLI with user settings, environment variables, and repository manifests.
+description: Configure the shareful-ai CLI with user settings and environment variables.
 ---
 
-The CLI uses a combination of user-level configuration, environment variables, and per-repository manifests.
+The CLI uses a combination of user-level configuration and environment variables.
 
 ## User configuration
 
 The CLI stores user settings at:
 
 ```
-~/.config/shareful/config.json
+~/.shareful/config.json
 ```
 
 ### Configuration fields
 
 | Field | Type | Description |
 | --- | --- | --- |
-| `sharesRepoPath` | string | Default path to your shares repository |
+| `sharesRepo` | string | Default path to your shares repository |
 
 ### Example
 
 ```json
 {
-  "sharesRepoPath": "/Users/you/code/my-shares"
+  "sharesRepo": "/Users/you/code/my-shares"
 }
 ```
 
-When `sharesRepoPath` is set, the CLI uses it as the default repository location. Otherwise, it uses the current working directory.
+When `sharesRepo` is set, the CLI uses it as the default repository location. Otherwise, it uses the current working directory.
 
 ## Environment variables
 
@@ -55,52 +55,12 @@ DISABLE_TELEMETRY=1 npx shareful-ai create
 
 | Event | Data |
 | --- | --- |
-| `create` | Share slug, solution type |
-| `publish` | Number of shares published |
-| `init` | Repository name |
-| `find` | Search query, result count |
+| `share` | Share slug, share count |
+| `init-repo` | Repository name |
+| `check` | Valid count, error count |
+| `add-skills` | None |
 
 No personal information, IP addresses, or device identifiers are collected.
-
-## Repository manifest
-
-Each shares repository contains a `shareful.json` manifest at its root. This file is managed by the CLI and should not be edited manually.
-
-```json
-{
-  "version": 1,
-  "owner": "your-github-username",
-  "shares": [
-    {
-      "slug": "fix-nextjs-hydration-mismatch",
-      "title": "Fix Next.js hydration mismatch with dynamic imports",
-      "tags": ["nextjs", "react", "hydration"],
-      "problem": "Next.js throws hydration errors when rendering browser-only components",
-      "solution_type": "fix"
-    }
-  ]
-}
-```
-
-The manifest is regenerated from your `SHARE.md` files each time you run `npx shareful-ai publish`.
-
-### Manifest fields
-
-| Field | Type | Description |
-| --- | --- | --- |
-| `version` | number | Manifest format version (currently `1`) |
-| `owner` | string | GitHub username extracted from the Git remote |
-| `shares` | array | Array of share entries |
-
-Each share entry contains:
-
-| Field | Type | Description |
-| --- | --- | --- |
-| `slug` | string | URL-safe identifier |
-| `title` | string | Share title |
-| `tags` | string[] | Associated tags |
-| `problem` | string | One-sentence problem description |
-| `solution_type` | string | Solution type |
 
 ## Directory structure
 
@@ -108,10 +68,9 @@ A shares repository follows this structure:
 
 ```
 my-shares/
-  shareful.json          # Manifest (auto-generated)
   shares/
     fix-nextjs-hydration/
-      SHARE.md           # Share content
+      SHARE.md
     prisma-pooling/
       SHARE.md
 ```
@@ -121,11 +80,11 @@ The `shares/` directory name and the `SHARE.md` filename are constants defined b
 ## Requirements
 
 - **Node.js** 18 or later
-- **Git** with a configured remote (for publishing)
+- **Git** for version control
 - **GitHub** repository (for indexing and discovery)
 
 ## Next steps
 
 - Read the [CLI reference](/docs/cli) for all commands
 - Learn how to [create shares](/docs/creating-shares)
-- See [publishing](/docs/publishing) for the full workflow
+- See [finding shares](/docs/finding-shares) for search options

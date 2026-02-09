@@ -8,7 +8,7 @@ Shareful indexes solutions published by the community. Use the CLI or the search
 ## Search from the CLI
 
 ```bash
-npx shareful-ai find "hydration mismatch nextjs"
+npx shareful-ai search "hydration mismatch nextjs"
 ```
 
 The CLI queries `https://shareful.ai/api/search` and displays matching shares with their title, solution type, tags, and a link to the full content.
@@ -19,22 +19,22 @@ Narrow your search with flags:
 
 ```bash
 # Only show fixes
-npx shareful-ai find "auth" --type fix
+npx shareful-ai search "auth" --type fix
 
 # Filter by tags
-npx shareful-ai find "database" --tags prisma
+npx shareful-ai search "database" --tags prisma
 
 # Combine filters with a result limit
-npx shareful-ai find "caching" --type pattern --tags redis --limit 3
+npx shareful-ai search "caching" --type pattern --tags redis --limit 3
 ```
 
 ### Available filters
 
-| Flag | Description | Values |
+| Flag | Description | Default |
 | --- | --- | --- |
-| `--type` | Filter by solution type | `fix`, `workaround`, `pattern`, `reference`, `config` |
-| `--tags` | Filter by tags (comma-separated) | Any tag string |
-| `--limit` | Maximum results to return | Number |
+| `--type` | Filter by solution type (`fix`, `workaround`, `pattern`, `reference`, `config`) | All types |
+| `--tags` | Filter by tags (comma-separated) | No filter |
+| `--limit` | Maximum results to return | 5 |
 
 ## Search results
 
@@ -43,8 +43,6 @@ Each result includes:
 | Field | Description |
 | --- | --- |
 | `title` | The share's title |
-| `owner` | GitHub username of the author |
-| `repo` | Repository where the share lives |
 | `problem` | One-sentence problem description |
 | `solution_type` | Type of solution |
 | `tags` | Associated tags |
@@ -56,20 +54,20 @@ Each result includes:
 **Use error messages.** Paste the exact error text you're seeing. Shares often include error messages in their Problem section, making them match well.
 
 ```bash
-npx shareful-ai find "Could not find plugin react"
+npx shareful-ai search "Could not find plugin react"
 ```
 
 **Be specific about the framework.** Include the framework name and version when relevant.
 
 ```bash
-npx shareful-ai find "prisma connection pool nextjs"
+npx shareful-ai search "prisma connection pool nextjs"
 ```
 
 **Try different solution types.** If you don't find a fix, try searching for workarounds or patterns instead.
 
 ```bash
-npx shareful-ai find "rate limiting" --type workaround
-npx shareful-ai find "rate limiting" --type pattern
+npx shareful-ai search "rate limiting" --type workaround
+npx shareful-ai search "rate limiting" --type pattern
 ```
 
 ## Search API
@@ -85,7 +83,7 @@ GET https://shareful.ai/api/search?q=<query>&limit=5&type=fix&tags=react
 | Parameter | Type | Description |
 | --- | --- | --- |
 | `q` | string | Search query (required) |
-| `limit` | number | Maximum results |
+| `limit` | number | Maximum results (default: 5) |
 | `type` | string | Filter by solution type |
 | `tags` | string | Filter by tags (comma-separated) |
 
@@ -97,19 +95,14 @@ GET https://shareful.ai/api/search?q=<query>&limit=5&type=fix&tags=react
     {
       "slug": "fix-nextjs-hydration-mismatch",
       "title": "Fix Next.js hydration mismatch with dynamic imports",
-      "owner": "username",
-      "repo": "my-shares",
       "problem": "Next.js throws hydration errors when rendering browser-only components",
       "solution_type": "fix",
       "tags": ["nextjs", "react", "hydration"],
-      "content": "...",
       "url": "https://github.com/username/my-shares/blob/main/shares/fix-nextjs-hydration-mismatch/SHARE.md",
-      "verified": true,
-      "created": "2025-01-15"
+      "verified": true
     }
   ],
-  "total": 1,
-  "query": "hydration mismatch nextjs"
+  "total": 1
 }
 ```
 

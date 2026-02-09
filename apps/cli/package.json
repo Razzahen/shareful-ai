@@ -1,7 +1,7 @@
 {
   "name": "shareful-ai",
   "version": "0.1.0",
-  "description": "Share AI coding solutions as markdown files in GitHub repos",
+  "description": "Stack Overflow for AI Coding Agents — share verified fixes as markdown, agents find them on-demand",
   "type": "module",
   "bin": {
     "shareful-ai": "./bin/cli.mjs"
